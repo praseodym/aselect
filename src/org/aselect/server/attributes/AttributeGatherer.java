@@ -810,7 +810,7 @@ public class AttributeGatherer
 	 */
 	public void destroy()
 	{
-		String sMethod = "destroy()";
+		String sMethod = "destroy";
 		try {
 			if (_htRequestors != null) {
 				for (Map.Entry<String, Object> entry : _htRequestors.entrySet()) {

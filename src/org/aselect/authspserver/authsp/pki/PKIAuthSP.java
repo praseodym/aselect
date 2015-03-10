@@ -23,6 +23,7 @@ package org.aselect.authspserver.authsp.pki;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -613,21 +614,7 @@ public class PKIAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 		try {
 			// Bauke, 20091002: Base64 encoded to pass non ASCII characters
 			BASE64Encoder base64Encoder = new BASE64Encoder();
-//	RH, 20131216, so			
-//			sSubjectDN = base64Encoder.encode(sSubjectDN.getBytes("UTF-8"));
-//			sIssuerDN = base64Encoder.encode(sIssuerDN.getBytes("UTF-8"));
-//			sSubjectId = base64Encoder.encode(sSubjectId.getBytes("UTF-8"));
-//			sbTemp = new StringBuffer(sRid);
-//			sbTemp.append(sAsUrl).append(sResultCode).append(sAsId);
-//			if (sSubjectDN != null)
-//				sbTemp.append(sSubjectDN); // Bauke: added
-//			if (sIssuerDN != null)
-//				sbTemp.append(sIssuerDN); // Bauke: added
-//			if (sSubjectId != null)
-//				sbTemp.append(sSubjectId); // Bauke: added
-//			RH, 20131216, eo
 
-//			RH, 20131216, sn, allow for nulls		
 			sbTemp = new StringBuffer(sRid);
 			sbTemp.append(sAsUrl).append(sResultCode).append(sAsId);
 			if (sSubjectDN != null) {
@@ -887,7 +874,7 @@ public class PKIAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 			sbRequest.append("&signature=").append("DUMMY");
 
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Send:" + sbRequest);
-			String sResponseString = send(sbRequest.toString());
+			String sResponseString = sendGetRequest(sbRequest.toString());
 
 			HashMap xResponse = Utils.convertCGIMessage(sResponseString, false);
 			String sResponseCode = ((String) xResponse.get("status"));
@@ -928,7 +915,7 @@ public class PKIAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 	 * @throws IOException
 	 *             when connection is failed.
 	 */
-	private String send(String sUrl)
+	private String sendGetRequest(String sUrl)
 	throws IOException
 	{
 		URL oServer = new URL(sUrl.toString());
@@ -965,20 +952,10 @@ public class PKIAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 	private void sendPage(String sTemplate, HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws IOException
 	{
-		// disable caching
-		if (servletRequest.getProtocol().equals("HTTP/1.1")) {  // HTTP 1.1 protocol used
-			servletResponse.setHeader("Cache-Control", "no-cache, must-revalidate");
-		}
-		else {  // other protocol versions
-			servletResponse.setHeader("Pragma", "no-cache");
-		}
-		servletResponse.setHeader("Expires", "0"); // date in the past
+		PrintWriter pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
-		// sent content type and length
-		servletResponse.setContentType("text/html; charset=utf-8");
+		// Set length and write output
 		servletResponse.setContentLength(sTemplate.length());
-
-		// write to output
-		servletResponse.getWriter().write(sTemplate);
+		pwOut.write(sTemplate);
 	}
 }

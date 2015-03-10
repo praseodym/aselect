@@ -124,7 +124,7 @@ public class SAMService extends SAMServiceServlet
 
 		_bASelectOK = true;
 
-		_systemLogger.log(Level.INFO, MODULE, "init()", "Successfully started SAM Service.");
+		_systemLogger.log(Level.INFO, MODULE, "init", "Successfully started SAM Service.");
 	}
 
 	/**
@@ -159,7 +159,7 @@ public class SAMService extends SAMServiceServlet
 	@Override
 	protected HashMap getSAMInfo()
 	{
-		String sMethod = "getSAMInfo()";
+		String sMethod = "getSAMInfo";
 		HashMap htInfo = getCommonSAMInfo();
 		long lMaxSessions = 0;
 		long lMaxTGT = 0;

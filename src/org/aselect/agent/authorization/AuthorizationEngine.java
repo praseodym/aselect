@@ -166,7 +166,7 @@ public class AuthorizationEngine
 	 */
 	public boolean init(Object oAuthorizationConfig, ConfigManager configManager, SystemLogger systemlogger)
 	{
-		final String sMethod = "init()";
+		final String sMethod = "init";
 		Object oAuthorizationApplicationsSection = null;
 		Object oAuthorizationApplicationSection = null;
 		Object oRulesSection = null;

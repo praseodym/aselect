@@ -184,18 +184,21 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	@SuppressWarnings("unchecked")
-	public RequestState process(HttpServletRequest request, HttpServletResponse response)
+	public RequestState process(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		String sMethod = "process";
 		String sRid;
 		String sFederationUrl = null;
+		PrintWriter pwOut = null;
 
 		String sMyUrl = _sServerUrl; // extractAselectServerUrl(request);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "MyUrl=" + sMyUrl + " MyId="+getID()+ " path=" + request.getPathInfo());
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "MyUrl=" + sMyUrl + " MyId="+getID()+ " path=" + servletRequest.getPathInfo());
 
 		try {
-			sRid = request.getParameter("rid");
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+
+			sRid = servletRequest.getParameter("rid");
 			if (sRid == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing RID parameter");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -213,7 +216,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			// 20110308, Bauke: changed, user chooses when "use_idp_select" is "true"
 			//     otherwise this handler uses it's own resource group to get a resource and sets "federation_url"
 			//     to the id of that resource
-			sFederationUrl = request.getParameter("federation_url");
+			sFederationUrl = servletRequest.getParameter("federation_url");
 			
 			//int cnt = MetaDataManagerSp.getHandle().getIdpCount();
 			//if (cnt == 1) {
@@ -231,17 +234,13 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				sIdpSelectForm = Utils.replaceString(sIdpSelectForm, "[handler_id]", getID());
 				sIdpSelectForm = Utils.replaceString(sIdpSelectForm, "[a-select-server]", _sServerId);  // 20110310
 				//sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
-				sIdpSelectForm = _configManager.updateTemplate(sIdpSelectForm, _htSessionContext, request);  // 20130822, Bauke: added to show requestor_friendly_name
+				sIdpSelectForm = _configManager.updateTemplate(sIdpSelectForm, _htSessionContext, servletRequest);  // 20130822, Bauke: added to show requestor_friendly_name
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "Template updated, [handler_url]="+sMyUrl + "/" + getID());
-				response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-				response.setContentType("text/html; charset=utf-8");
-				response.setHeader("Pragma", "no-cache");
-				PrintWriter pwOut = response.getWriter();
+
 				_htSessionContext.put("user_state", "state_idpselect");			
 				_oSessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession
 				Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102 can update the session
 				pwOut.println(sIdpSelectForm);
-				pwOut.close();
 				return new RequestState(null);
 			}
 			// federation_url was set or bIdpSelectForm is false
@@ -274,12 +273,9 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 					//sRedirectUrl = Utils.replaceString(sRedirectUrl, "[language]", sLanguage);
 					_systemLogger.log(Level.FINER, MODULE, sMethod, "Fallback REDIRECT to: " + sRedirectUrl);
 					
-					response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-					response.setContentType("text/html; charset=utf-8");
-					response.setHeader("Pragma", "no-cache");
 					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102 can change the session
 					//_oSessionManager.updateSession(sRid, _htSessionContext);  // 20120403, Bauke: removed
-					response.sendRedirect(sRedirectUrl);
+					servletResponse.sendRedirect(sRedirectUrl);
 					return new RequestState(null);
 				}
 				else {
@@ -534,7 +530,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "GET EndPoint="+samlEndpoint+" Destination="+sDestination);
 				
 				//HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, sDestination);
-				HttpServletResponseAdapter outTransport = new HttpServletResponseAdapter(response,
+				HttpServletResponseAdapter outTransport = new HttpServletResponseAdapter(servletResponse,
 							(sDestination == null)? false: sDestination.toLowerCase().startsWith("https"));
 				
 				// RH, 20081113, set appropriate headers
@@ -602,7 +598,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 					sInputs += buildHtmlInput("language",sLang);
 	
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "Inputs=" + Utils.firstPartOf(sInputs,200));
-				handlePostForm(_sPostTemplate, sDestination, sInputs, response);
+				handlePostForm(_sPostTemplate, sDestination, sInputs, servletRequest, servletResponse);
 			}
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102 can change the session
 		}
@@ -614,13 +610,16 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		finally {
+			if (pwOut != null)
+				pwOut.close();
+			
 			// 20130821, Bauke: save friendly name after session is gone
 			if (_htSessionContext != null) {
 				String sStatus = (String)_htSessionContext.get("status");
 				String sAppId = (String)_htSessionContext.get("app_id");
 				if ("del".equals(sStatus) && Utils.hasValue(sAppId)) {
 					String sUF = ApplicationManager.getHandle().getFriendlyName(sAppId);
-					HandlerTools.setEncryptedCookie(response, "requestor_friendly_name", sUF, _configManager.getCookieDomain(), -1/*age*/, _systemLogger);
+					HandlerTools.setEncryptedCookie(servletResponse, "requestor_friendly_name", sUF, _configManager.getCookieDomain(), -1/*age*/, _systemLogger);
 				}
 			}
 			_oSessionManager.finalSessionProcessing(_htSessionContext, true/*update session*/);

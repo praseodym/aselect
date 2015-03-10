@@ -174,8 +174,7 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "doGet");
 
 		try {
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
-			pwOut = servletResponse.getWriter();
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 			String sQueryString = servletRequest.getQueryString();
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
@@ -222,7 +221,6 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 						throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 					}
 	
-					servletResponse.setContentType("text/html; charset=utf-8");
 					// URL decode values
 					_systemLogger.log(Level.FINEST, MODULE, sMethod, "URL decode values");
 					sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
@@ -311,7 +309,6 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 						_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
 						throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 					}
-					servletResponse.setContentType("text/html; charset=utf-8");
 
 					boolean matches = false;
 					// handle openidresponse and find out if the user is authentic
@@ -392,10 +389,8 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER, sLanguage);
 		}
 		finally {
-			if (pwOut != null) {
+			if (pwOut != null)
 				pwOut.close();
-				pwOut = null;
-			}
 		}
 	}
 
@@ -430,9 +425,7 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "Starting openid stuff");		
 		try {
-			servletResponse.setContentType("text/html; charset=utf-8");
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
-			pwOut = servletResponse.getWriter();
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 			String sMyUrl = servletRequest.getRequestURL().toString();
 			String sRid = servletRequest.getParameter("rid");
@@ -807,6 +800,7 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 			sbResponse.append("=").append(eAS.getMessage());
 		}
 		// set reponse headers
+		// Overwrite prepareForHtmlOutput() settings
 		servletResponse.setContentType("application/x-www-form-urlencoded");
 		servletResponse.setContentLength(sbResponse.length());
 		// respond

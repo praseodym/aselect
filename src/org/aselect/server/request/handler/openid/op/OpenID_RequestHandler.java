@@ -225,7 +225,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 		    		localID = localID.replaceFirst("^/", ""); // strip starting slash
 					
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "localID:" + localID);
-					Utils.sendDiscoveryResponse(response, createXrdsResponse(localID), _systemLogger);
+					Utils.sendDiscoveryResponse(request, response, createXrdsResponse(localID), _systemLogger);
 				}
 				catch (IOException e) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Problem sending XRDS response");
@@ -243,16 +243,13 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Process an association request");
 		    	opResponse = serverManager.associationResponse(requestp);
 		    	Utils.logRequestParameters(requestp, _systemLogger);
-		    	Utils.sendPlainTextResponse(response, opResponse, _systemLogger);
-		        
+		    	Utils.sendPlainTextResponse(request, response, opResponse, _systemLogger);
 		    }
 		    else if ("checkid_setup".equals(mode) || "checkid_immediate".equals(mode)) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Process a checkid_setup or checkid_immediate request");
 		    	Utils.logRequestParameters(requestp, _systemLogger);
 		    	
-		    	// RM_31_02
-		    	// RM_31_03
-		    	
+		    	// RM_31_02, RM_31_03
 		    	// authenticate to the aselect server
 	    		String ridReqURL = aselectServerURL;
 	    		String ridSharedSecret = sharedSecret;
@@ -269,7 +266,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "return error, extensions not supported (yet) ");
 			    	Utils.logRequestParameters(requestp, _systemLogger);
 			    	opResponse = DirectError.createDirectError("Extensions not supported (yet)");
-			    	Utils.sendPlainTextResponse(response, opResponse, _systemLogger);
+			    	Utils.sendPlainTextResponse(request, response, opResponse, _systemLogger);
 	    		}
 	    		String uid = null;
 	    		if ("http://specs.openid.net/auth/2.0/identifier_select".equals(identity)) {
@@ -365,7 +362,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Process a check_authentication request");
 		    	Utils.logRequestParameters(requestp, _systemLogger);
 		        opResponse = serverManager.verify(requestp);
-		    	Utils.sendPlainTextResponse(response, opResponse, _systemLogger);
+		    	Utils.sendPlainTextResponse(request, response, opResponse, _systemLogger);
 		    }
 		    else {
 		    	// This should be the aselectserver response
@@ -432,7 +429,6 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 							}
 		    		}
 
-		    		
 		    		String extractedAttributes = finalResult.replaceFirst(".*attributes=([^&]*).*$", "$1");
 		    		String extractedResultCode = finalResult.replaceFirst(".*result_code=([^&]*).*$", "$1");
 
@@ -472,7 +468,8 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 			        Boolean authenticatedAndApproved = false;
 			        try {
 			        	authenticatedAndApproved = Boolean.valueOf(Integer.parseInt(extractedResultCode) == 0);
-			        } catch (NumberFormatException nfe ) {
+			        }
+			        catch (NumberFormatException nfe ) {
 						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Resultcode from aselectserver was non-numeric: " + extractedResultCode);
 			        }
 			        
@@ -516,7 +513,6 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 					//		responseText = opResponse.wwwFormEncoding();
 			        //		String sRedirectUrl = opResponse.getDestinationUrl(false); 
 			        //		redirect(opResponse.getDestinationUrl(false));
-
 		    		
 		    	} else {
 		    		// oops, it was not an aselectserver response
@@ -524,7 +520,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unknown request: " + mode);
 			    	Utils.logRequestParameters(requestp, _systemLogger);
 			    	opResponse = DirectError.createDirectError("Unknown request");
-			    	Utils.sendPlainTextResponse(response, opResponse, _systemLogger);
+			    	Utils.sendPlainTextResponse(request, response, opResponse, _systemLogger);
 		    	}
 		    }
 		return null;
@@ -532,54 +528,59 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 
 	public void destroy()
 	{
-
 	}
 
+	public synchronized String getOpEndpointUrl()
+	{
+		return opEndpointUrl;
+	}
 
-	
-	 public synchronized String getOpEndpointUrl()
-		{
-			return opEndpointUrl;
+	public synchronized void setOpEndpointUrl(String opEndpointUrl)
+	{
+		this.opEndpointUrl = opEndpointUrl;
+	}
+
+	/**
+	 * @return
+	 */
+	public String createXrdsResponse()
+	{
+		return createXrdsResponse(null);
+	}
+
+	/**
+	 * @param the
+	 *            (optional) localID to return in the XRDS
+	 * @return
+	 */
+	public String createXrdsResponse(String localID)
+	{
+		String sMethod = "createXrdsResponse";
+
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "BEGIN");
+
+		org.aselect.server.request.handler.openid.XrdsDocumentBuilder documentBuilder = new org.aselect.server.request.handler.openid.XrdsDocumentBuilder();
+		if (localID == null || "".equals(localID)) {
+			documentBuilder.addServiceElement(
+					"http://specs.openid.net/auth/2.0/server", serverManager
+							.getOPEndpointUrl(), "0");
+			documentBuilder.addServiceElement(
+					"http://specs.openid.net/auth/2.0/signon", serverManager
+							.getOPEndpointUrl(), "10");
+		}
+		else {
+			documentBuilder.addServiceElement(
+					"http://specs.openid.net/auth/2.0/signon", serverManager
+							.getOPEndpointUrl(), "10", localID);
 		}
 
-
-		public synchronized void setOpEndpointUrl(String opEndpointUrl)
-		{
-			this.opEndpointUrl = opEndpointUrl;
-		}
-		
-		  /**
-		   * @return
-		   */
-		  public String createXrdsResponse() {
-			  return createXrdsResponse(null);
-		  }
-		  
-
-		
-			/**
-		   * @param the (optional) localID to return in the XRDS
-		   * @return
-		   */
-		  public String createXrdsResponse(String localID) {
-				String sMethod = "createXrdsResponse";
-			  
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "BEGIN");
-			  
-		    org.aselect.server.request.handler.openid.XrdsDocumentBuilder documentBuilder = new org.aselect.server.request.handler.openid.XrdsDocumentBuilder();
-		    if (localID == null || "".equals(localID)) {
-			    documentBuilder.addServiceElement("http://specs.openid.net/auth/2.0/server", serverManager.getOPEndpointUrl(), "0");
-			    documentBuilder.addServiceElement("http://specs.openid.net/auth/2.0/signon", serverManager.getOPEndpointUrl(), "10");
-		    } else {
-			    documentBuilder.addServiceElement("http://specs.openid.net/auth/2.0/signon", serverManager.getOPEndpointUrl(), "10", localID);
-		    }
-
-		    // next lines needed when we implement extensions
-//		    documentBuilder.addServiceElement(AxMessage.OPENID_NS_AX, serverManager.getOPEndpointUrl(), "30");
-//		    documentBuilder.addServiceElement(SRegMessage.OPENID_NS_SREG, serverManager.getOPEndpointUrl(), "40");
-		    String xmlString = documentBuilder.toXmlString();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "created XrdsResponse: " + xmlString);
-		    return xmlString;
-		  }
-
+		// next lines needed when we implement extensions
+		// documentBuilder.addServiceElement(AxMessage.OPENID_NS_AX,
+		// serverManager.getOPEndpointUrl(), "30");
+		// documentBuilder.addServiceElement(SRegMessage.OPENID_NS_SREG,
+		// serverManager.getOPEndpointUrl(), "40");
+		String xmlString = documentBuilder.toXmlString();
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "created XrdsResponse: " + xmlString);
+		return xmlString;
+	}
 }

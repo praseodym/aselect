@@ -154,7 +154,7 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 			intMaxTGT = Integer.valueOf(sMaxTgt);
 		}
 		catch (ASelectConfigException e) {
-			ASelectSystemLogger.getHandle().log(Level.SEVERE, MODULE, "TGTMonitorModel()",
+			ASelectSystemLogger.getHandle().log(Level.SEVERE, MODULE, "TGTMonitorModel",
 					"No valid 'max' config item found in 'storagemanager' config section with id='tgt'", e);
 
 			intMaxTGT = Integer.valueOf("100");
@@ -314,7 +314,7 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 			catch (Exception x) {
 			}
 		}
-		ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "run()", "TGT Monitor model stopped");
+		ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "run", "TGT Monitor model stopped");
 	}
 
 	/**
@@ -348,7 +348,7 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 			}
 		}
 		catch (Exception e) {
-			ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE, "getServerStatus()",
+			ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE, "getServerStatus",
 					"No session contexts available");
 		}
 	}

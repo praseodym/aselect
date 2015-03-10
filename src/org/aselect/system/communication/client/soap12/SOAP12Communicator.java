@@ -179,7 +179,7 @@ public class SOAP12Communicator implements IClientCommunicator
 		sMessage = createMessage(htParameters, sTarget);
 		try {
 			// Send the message
-			sResponse = send(sMessage, sTarget);
+			sResponse = sendTheSoapMessage(sMessage, sTarget);
 		}
 		catch (java.net.MalformedURLException eMU)
 		// exception if URL is malformed
@@ -218,7 +218,7 @@ public class SOAP12Communicator implements IClientCommunicator
 		sbMessage.append("\n</SOAP-ENV:Body></SOAP-ENV:Envelope>");
 		try {
 			// Send the message
-			sResponse = send(sbMessage.toString(), sTarget);
+			sResponse = sendTheSoapMessage(sbMessage.toString(), sTarget);
 		}
 		catch (java.net.MalformedURLException eMU) {
 			StringBuffer sbBuffer = new StringBuffer("Invalid URL: ");
@@ -344,7 +344,7 @@ public class SOAP12Communicator implements IClientCommunicator
 	 * @throws MalformedURLException
 	 *             the malformed url exception
 	 */
-	private String send(String sMessage, String sUrl)
+	private String sendTheSoapMessage(String sMessage, String sUrl)
 	throws java.net.MalformedURLException, ASelectCommunicationException
 	{
 		String sMethod = "send";

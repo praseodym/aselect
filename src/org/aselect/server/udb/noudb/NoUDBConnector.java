@@ -280,7 +280,7 @@ public class NoUDBConnector implements IUDBConnector
 	 */
 	public String getUserAttributes(String sUserId, String sAuthSPId)
 	{
-		String sMethod = "getUserAttributes()";
+		String sMethod = "getUserAttributes";
 		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "User=" + sUserId + " Authsp=" + sAuthSPId);
 		String sAttributesValue = sUserId == null ? "" : sUserId;
 		return sAttributesValue;

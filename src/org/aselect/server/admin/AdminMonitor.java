@@ -302,7 +302,7 @@ public class AdminMonitor extends JFrame implements TableModelListener
 		toFront();
 
 		// log success
-		ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "start()", "Successfully initialized Admin monitor.");
+		ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "start", "Successfully initialized Admin monitor.");
 	}
 
 	/**
@@ -331,7 +331,7 @@ public class AdminMonitor extends JFrame implements TableModelListener
 
 		setVisible(false);
 
-		ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "stop()", "Admin monitor stopped");
+		ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "stop", "Admin monitor stopped");
 	}
 
 	/**

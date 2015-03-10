@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.xml.security.signature.XMLSignature;
@@ -162,7 +163,7 @@ public class BrowserPost extends AbstractWebSSOProfile
 	 *      javax.servlet.http.HttpServletResponse, java.lang.String, java.lang.String)
 	 */
 	@Override
-	public void process(HashMap htInfo, HttpServletResponse response, String sIP, String sHost)
+	public void process(HashMap htInfo, HttpServletRequest request, HttpServletResponse response, String sIP, String sHost)
 	throws ASelectException
 	{
 		String sMethod = "process";
@@ -232,8 +233,7 @@ public class BrowserPost extends AbstractWebSSOProfile
 			oSAMLResponse.sign(XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA1, _configManager.getDefaultPrivateKey(),
 					vCertificatesToInclude);
 
-			send(response, oSAMLResponse, sShire, sTarget);
-
+			sendBrowserResponse(request, response, oSAMLResponse, sShire, sTarget);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -274,7 +274,7 @@ public class BrowserPost extends AbstractWebSSOProfile
 	 * <b>Postconditions:</b> <br>
 	 * - <br>
 	 * 
-	 * @param response
+	 * @param servletResponse
 	 *            HttpServletResponse were the page will be shown
 	 * @param oSAMLResponse
 	 *            Containing the SAML Assertions
@@ -285,15 +285,14 @@ public class BrowserPost extends AbstractWebSSOProfile
 	 * @throws ASelectException
 	 *             if the page could not be displayed or the Base64 encoding fails
 	 */
-	private void send(HttpServletResponse response, SAMLResponse oSAMLResponse, String sAction, String sTarget)
+	private void sendBrowserResponse(HttpServletRequest servletRequest, HttpServletResponse servletResponse, SAMLResponse oSAMLResponse, String sAction, String sTarget)
 	throws ASelectException
 	{
 		String sMethod = "send";
 		PrintWriter pwOut = null;
 		try {
-			response.setContentType("text/html; charset=utf-8");
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
-			pwOut = response.getWriter();
 			String sHTMLResponse = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(),
 					null/*language*/, _sTemplateName, null, null/*friendly_name*/, null/*version*/);
 

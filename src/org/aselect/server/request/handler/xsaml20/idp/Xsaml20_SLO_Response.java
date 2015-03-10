@@ -12,6 +12,7 @@
 package org.aselect.server.request.handler.xsaml20.idp;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -114,7 +115,7 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 	 */
 	@Override
 	protected void handleSpecificSaml20Request(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-			SignableSAMLObject samlMessage, String sRelayState)
+			PrintWriter pwOut, SignableSAMLObject samlMessage, String sRelayState)
 	throws ASelectException
 	{
 		String sMethod = "handleSpecificSaml20Request";

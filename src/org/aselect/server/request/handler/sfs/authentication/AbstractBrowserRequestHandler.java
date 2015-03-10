@@ -196,9 +196,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 		PrintWriter pwOut = null;
 		HashMap htServiceRequest = null;
 		try {
-			pwOut = _servletResponse.getWriter();
-			_servletResponse.setContentType("text/html; charset=utf-8");
-			htServiceRequest = createServiceRequest(_servletRequest);
+			pwOut = Utils.prepareForHtmlOutput(_servletRequest, _servletResponse);
 
 			String sRequest = (String) htServiceRequest.get("request");
 			// only check a-select-server if request == null

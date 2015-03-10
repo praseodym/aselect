@@ -38,6 +38,7 @@ import org.aselect.server.request.handler.xsaml20.ServiceProvider;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.SAMLVersion;
@@ -113,7 +114,6 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 			String docReceived = readHttpPostData(request);
 			String sNameID = null;
 			String sp = null;
-			// String credentials = null;
 
 			boolean samlMessage = determineMessageType(docReceived);
 			if (samlMessage) {
@@ -150,15 +150,13 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 					}
 				}
 			}
-			else {
-				// Handle XACML Request
+			else {  // Handle XACML Request
 				Document xacmlDocument = handleXACMLRequest(docReceived);
 				sNameID = getNameIdFromXAML(xacmlDocument);
 				sp = getServiceProviderFromXACML(xacmlDocument);
 				_systemLogger.log(Level.INFO, MODULE, _sMethod, "XACML NameID === " + sNameID + " XACML sp ===" + sp);
 			}
 
-			// credentials = sNameID;
 			try {
 				if (sNameID != null && sp != null) {
 					// Update update time for sp
@@ -302,7 +300,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 
 		try { // Bauke 20081112: used same code for all Soap messages
 			// Remy: 20081113: Move this code to HandlerTools for uniformity
-			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));
+			SamlTools.sendSOAPResponse(request, response, XMLHelper.nodeToString(envelopeElem));
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "Failed to send response", e);
@@ -522,27 +520,28 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	/**
 	 * Send xacml response.
 	 * 
-	 * @param request
+	 * @param servletRequest
 	 *            the request
-	 * @param response
+	 * @param servletResponse
 	 *            the response
 	 * @param uid
 	 *            the uid
 	 * @param permit
 	 *            the permit
 	 */
-	private void sendXACMLResponse(HttpServletRequest request, HttpServletResponse response, String uid, boolean permit)
+	private void sendXACMLResponse(HttpServletRequest servletRequest, HttpServletResponse servletResponse, String uid, boolean permit)
 	{
 		String _sMethod = "sendXACMLResponse";
+		PrintWriter pwOut = null;
+		
 		_systemLogger.log(Level.INFO, MODULE, _sMethod, "Send XACML response to SP");
-
 		String finalResponse = buildXACMLResponse(uid, permit);
 		_systemLogger.log(Level.INFO, MODULE, _sMethod, "Send XACML response: " + finalResponse);
-		response.setContentType("text/xml; charset=utf-8");
+		
 		try {
-			PrintWriter writer = response.getWriter();
-			writer.write(finalResponse);
-			writer.close();
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+			pwOut.write(finalResponse);
+			pwOut.close();
 		}
 		catch (IOException io) {
 			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "IOException trying to send response to sp", io);
@@ -663,7 +662,6 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 			serializer.serialize(docReceivedSoap);
 
 			// Get AuthzDecision obj
-
 			Node node = docReceivedSoap.getFirstChild();
 			Node doesAuthzExist = SamlTools.getNode(node, AUTHZDECISIONQUERY);
 			if (doesAuthzExist == null) {

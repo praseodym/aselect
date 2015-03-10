@@ -48,7 +48,7 @@ public class NonClosingConnectionHandler extends AbstractConnectionHandler
 	throws ASelectStorageException
 	{
 		super.getConnection();
-		String sMethod = "getConnection()";
+		String sMethod = "getConnection";
 		String sPassword = null;
 		String sJDBCDriver = null;
 		String sUsername = null;
@@ -181,7 +181,7 @@ public class NonClosingConnectionHandler extends AbstractConnectionHandler
 	@Override
 	public void releaseConnection(Connection c)
 	{
-		String sMethod = "releaseConnection()";
+		String sMethod = "releaseConnection";
 
 		// We only close the connection on destroy
 		// Connection will be reused, depends on thread-safety of JDBC Driver (which should be thread-safe)
@@ -199,12 +199,12 @@ public class NonClosingConnectionHandler extends AbstractConnectionHandler
 			if (_oActiveConnection != null) {
 				_oActiveConnection.close();
 				_oActiveConnection = null;
-				_systemLogger.log(Level.FINE, MODULE, "destroy()", "Active connection closed");
+				_systemLogger.log(Level.FINE, MODULE, "destroy", "Active connection closed");
 			}
 		}
 		catch (Exception e) { // Only log to system logger.
 			_systemLogger
-					.log(Level.FINE, MODULE, "destroy()", "An error occured while trying to destroy the module", e);
+					.log(Level.FINE, MODULE, "destroy", "An error occured while trying to destroy the module", e);
 		}
 	}
 

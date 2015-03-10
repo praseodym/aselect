@@ -19,6 +19,7 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.logging.Level;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.request.handler.saml11.common.AssertionSessionManager;
@@ -216,7 +217,7 @@ public class BrowserArtifact extends AbstractWebSSOProfile
 	 *      javax.servlet.http.HttpServletResponse, java.lang.String, java.lang.String)
 	 */
 	@Override
-	public void process(HashMap htInfo, HttpServletResponse response, String sIP, String sHost)
+	public void process(HashMap htInfo, HttpServletRequest request, HttpServletResponse response, String sIP, String sHost)
 	throws ASelectException
 	{
 		String sMethod = "process";
@@ -297,7 +298,7 @@ public class BrowserArtifact extends AbstractWebSSOProfile
 
 			_oAssertionSessionManager.putAssertion(oSAMLArtifact, oSAMLAssertion);
 
-			send(response, oSAMLArtifact, sShire, sTarget);
+			sendArtResponse(response, oSAMLArtifact, sShire, sTarget);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -351,7 +352,7 @@ public class BrowserArtifact extends AbstractWebSSOProfile
 	 * @throws ASelectException
 	 *             URLEncoding fails or redirect couldn't be sent
 	 */
-	private void send(HttpServletResponse response, SAMLArtifact oSAMLArtifact, String sShire, String sTarget)
+	private void sendArtResponse(HttpServletResponse response, SAMLArtifact oSAMLArtifact, String sShire, String sTarget)
 	throws ASelectException
 	{
 		String sMethod = "send";

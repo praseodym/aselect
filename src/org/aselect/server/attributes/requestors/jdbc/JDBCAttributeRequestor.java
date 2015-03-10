@@ -52,7 +52,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 	public void init(Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		// _htReMapAttributes = new HashMap();
 
 		super.init(oConfig);
@@ -162,7 +162,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes, HashMap hmAttributes)
 	throws ASelectAttributesException
 	{
-		String sMethod = "getAttributes()";
+		String sMethod = "getAttributes";
 		HashMap htAttributes = new HashMap();
 		Connection oConnection = null;
 

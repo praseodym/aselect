@@ -206,7 +206,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 			Element envelopeElem = SamlTools.marshallMessage(envelope);
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Writing SOAP message:\n" + XMLHelper.nodeToString(envelopeElem));
-			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));  // x_LogoutRequest_x Idp
+			SamlTools.sendSOAPResponse(request, response, XMLHelper.nodeToString(envelopeElem));  // x_LogoutRequest_x Idp
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);

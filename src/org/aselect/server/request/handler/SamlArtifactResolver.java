@@ -29,6 +29,7 @@ import org.aselect.server.request.handler.saml11.common.AssertionSessionManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
+import org.aselect.system.utils.Utils;
 import org.opensaml.SAMLAssertion;
 import org.opensaml.SAMLBinding;
 import org.opensaml.SAMLBindingFactory;
@@ -90,7 +91,7 @@ public abstract class SamlArtifactResolver extends ProtoRequestHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "ARTRES request=" + request + ", Method=" + request.getMethod()
 				+ ", Url=" + request.getRequestURL() + ", Type=" + request.getContentType());
 		try {
-			response.setContentType("text/xml; charset=utf-8");
+			Utils.prepareForHttpResponse(request, response, "text/xml");  // no PrintWriter needed
 			String sRequestUrl = request.getRequestURL().toString();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sRequestUrl=" + sRequestUrl);
 
@@ -192,11 +193,11 @@ public abstract class SamlArtifactResolver extends ProtoRequestHandler
 	 * @param response
 	 *            the response
 	 * @param oSAMLRequest
-	 *            the o saml request
+	 *            the saml request
 	 * @param oSAMLException
-	 *            the o saml exception
+	 *            the saml exception
 	 * @throws ASelectException
-	 *             the a select exception
+	 *             the aselect exception
 	 */
 	private void respondError(HttpServletResponse response, SAMLRequest oSAMLRequest, SAMLException oSAMLException)
 	throws ASelectException

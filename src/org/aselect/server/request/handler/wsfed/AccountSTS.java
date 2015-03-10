@@ -33,7 +33,6 @@ import org.aselect.server.tgt.TGTManager;
 import org.aselect.server.utils.Utils;
 import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.error.Errors;
-import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.*;
 import org.opensaml.SAMLException;
@@ -206,32 +205,32 @@ public class AccountSTS extends ProtoRequestHandler
 	/* (non-Javadoc)
 	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
-	public RequestState process(HttpServletRequest request, HttpServletResponse response)
+	public RequestState process(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		String sMethod = "process";
-		String sPathInfo = request.getPathInfo();
+		String sPathInfo = servletRequest.getPathInfo();
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Path=" + sPathInfo);
-		HandlerTools.logCookies(request, _systemLogger);
+		HandlerTools.logCookies(servletRequest, _systemLogger);
 
 		if (sPathInfo.endsWith(RETURN_SUFFIX)) {
-			return processReturn(request, response);
+			return processReturn(servletRequest, servletResponse);
 		}
 
-		String sPwa = request.getParameter("wa"); // action
-		String sPwreply = request.getParameter("wreply"); // response redirect URL, nog given by ADFS!
-		String sPwctx = request.getParameter("wctx"); // context value, pass unchanged
+		String sPwa = servletRequest.getParameter("wa"); // action
+		String sPwreply = servletRequest.getParameter("wreply"); // response redirect URL, nog given by ADFS!
+		String sPwctx = servletRequest.getParameter("wctx"); // context value, pass unchanged
 		// String sPwct = request.getParameter("wct"); // current time
-		String sPwtrealm = request.getParameter("wtrealm"); // requesting realm (resource accessed)
-		String sPwhr = request.getParameter("whr"); // requestor's home realm (account partner's client realm)
+		String sPwtrealm = servletRequest.getParameter("wtrealm"); // requesting realm (resource accessed)
+		String sPwhr = servletRequest.getParameter("whr"); // requestor's home realm (account partner's client realm)
 		
-		String sPwauth = request.getParameter("wauth"); // authentication method, will be (mis)used to select app_id which then determines authentication method
+		String sPwauth = servletRequest.getParameter("wauth"); // authentication method, will be (mis)used to select app_id which then determines authentication method
 		
 		
 
 		if (sPwa != null && sPwa.equals("wsignout1.0"))
-			return processSignout(request, response);
+			return processSignout(servletRequest, servletResponse);
 
 		if (sPwa == null || !sPwa.equals("wsignin1.0")) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Unknown or missing \"wa\" in call");
@@ -256,8 +255,8 @@ public class AccountSTS extends ProtoRequestHandler
 			sPwreply = sReply; // _sDefaultWreply; // "https://adfsresource.treyresearch.net/adfs/ls";
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'wreply' parameter in request, using: " + sPwreply);
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "wsfed_ap PATH=" + request.getPathInfo() + " "
-				+ request.getMethod() + " " + request.getQueryString());
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "wsfed_ap PATH=" + servletRequest.getPathInfo() + " "
+				+ servletRequest.getMethod() + " " + servletRequest.getQueryString());
 
 		HashMap htSessionData = new HashMap();
 		if (sPwtrealm != null)
@@ -268,7 +267,7 @@ public class AccountSTS extends ProtoRequestHandler
 			htSessionData.put("wctx", sPwctx);
 
 		// Look for a possible TGT
-		String sTgt = getCredentialsFromCookie(request);
+		String sTgt = getCredentialsFromCookie(servletRequest);
 		if (sTgt != null) {
 			HashMap htTGTContext = getContextFromTgt(sTgt, true); // Check expiration
 			if (htTGTContext != null) {
@@ -277,7 +276,7 @@ public class AccountSTS extends ProtoRequestHandler
 				// Return to the caller
 				String sUid = (String) htTGTContext.get("uid");
 				HashMap htAllAttributes = getAttributesFromTgtAndGatherer(htTGTContext);
-				return postRequestorToken(request, response, sUid, htSessionData, htAllAttributes);
+				return postRequestorToken(servletRequest, servletResponse, sUid, htSessionData, htAllAttributes);
 			}
 		}
 		String sASelectURL = _sServerUrl;
@@ -305,14 +304,14 @@ public class AccountSTS extends ProtoRequestHandler
 		_htSessionContext = (HashMap)htResponse.get("session");
 		
 		// We need this stuff when we come back. Store as an additional session record
-		_htSessionContext = storeSessionDataWithRid(response, htSessionData, _htSessionContext, SESSION_ID_PREFIX, sRid);
+		_htSessionContext = storeSessionDataWithRid(servletResponse, htSessionData, _htSessionContext, SESSION_ID_PREFIX, sRid);
 
 		// Let the user get himself identified
 		String sActionUrl = sASelectURL + _sIstsUrl;
 		String sReplyTo = sASelectURL + sPathInfo + RETURN_SUFFIX;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Form ActionUrl=" + sActionUrl);
 		handleShowForm(_sTemplate, sPwhr, sActionUrl, sPwctx, sReplyTo, Tools.samlCurrentTime(),
-						sASelectURL, sRid, _sASelectServerID, response);
+						sASelectURL, sRid, _sASelectServerID, servletRequest, servletResponse);
 
 		return new RequestState(null);
 	}
@@ -436,9 +435,9 @@ public class AccountSTS extends ProtoRequestHandler
 	/**
 	 * Post requestor token.
 	 * 
-	 * @param request
+	 * @param servletRequest
 	 *            the request
-	 * @param response
+	 * @param servletResponse
 	 *            the response
 	 * @param sUid
 	 *            the s uid
@@ -450,7 +449,7 @@ public class AccountSTS extends ProtoRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private RequestState postRequestorToken(HttpServletRequest request, HttpServletResponse response, String sUid,
+	private RequestState postRequestorToken(HttpServletRequest servletRequest, HttpServletResponse servletResponse, String sUid,
 			HashMap htSessionData, HashMap htAttributes)
 	throws ASelectException
 	{
@@ -476,7 +475,7 @@ public class AccountSTS extends ProtoRequestHandler
 			}
 //			String sRequestorToken = createRequestorToken(request, _sProviderId, sUid, _sUserDomain, _sNameIdFormat,
 //					sAudience, htAttributes, sSubjConf);	// RH, 20130924, o
-			String sRequestorToken = createRequestorToken(request, _sProviderId, sUid, _sUserDomain, _sNameIdFormat,
+			String sRequestorToken = createRequestorToken(servletRequest, _sProviderId, sUid, _sUserDomain, _sNameIdFormat,
 					sAudience, htAttributes, sSubjConf, _htSP_SignAlgorithm.get(sAudience));	// RH, 20130924, n
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Token OUT: RequestorToken wresult=" + sRequestorToken);
 
@@ -488,13 +487,13 @@ public class AccountSTS extends ProtoRequestHandler
 			sInputs += buildHtmlInput("wresult", Tools.htmlEncode(sRequestorToken));
 
 			// Kill the cookie so it can not be used again (to prevent loops)
-			HandlerTools.delCookieValue(response, SESSION_ID_PREFIX + "rid", _sCookieDomain, null, _systemLogger);
+			HandlerTools.delCookieValue(servletResponse, SESSION_ID_PREFIX + "rid", _sCookieDomain, null, _systemLogger);
 			// To support wslogout, we need to store the realm with the browser
-			HandlerTools.putCookieValue(response, SESSION_ID_PREFIX + "realm", sAudience,
+			HandlerTools.putCookieValue(servletResponse, SESSION_ID_PREFIX + "realm", sAudience,
 						_sCookieDomain, null, -1, 1/*httpOnly*/, _systemLogger);
 
 			// _systemLogger.log(Level.INFO, MODULE, sMethod, "Inputs=" + sInputs);
-			handlePostForm(_sPostTemplate, Tools.htmlEncode(sPwreply), sInputs, response);
+			handlePostForm(_sPostTemplate, Tools.htmlEncode(sPwreply), sInputs, servletRequest, servletResponse);
 
 			return new RequestState(null);
 		}

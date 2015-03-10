@@ -843,7 +843,7 @@ public class JNDIConnector implements IUDBConnector
 	private DirContext getConnection()
 	throws ASelectUDBException, ASelectSAMException
 	{
-		String sMethod = "getConnection()";
+		String sMethod = "getConnection";
 
 		SAMResource oSAMResource = null;
 		String sDriver = null;

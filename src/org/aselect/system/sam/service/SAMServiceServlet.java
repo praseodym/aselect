@@ -13,34 +13,6 @@
 /* 
  * $Id: SAMServiceServlet.java,v 1.17 2006/05/03 09:31:06 tom Exp $ 
  * 
- * Changelog:
- * $Log: SAMServiceServlet.java,v $
- * Revision 1.17  2006/05/03 09:31:06  tom
- * Removed Javadoc version
- *
- * Revision 1.16  2005/09/08 12:47:11  erwin
- * Changed version number to 1.4.2
- *
- * Revision 1.15  2005/09/08 07:08:19  erwin
- * Improved error handling (bug #110)
- *
- * Revision 1.14  2005/04/14 08:43:47  tom
- * Removed old logging statements
- *
- * Revision 1.13  2005/03/31 10:03:08  erwin
- * ".*" wildcards are now supported.
- *
- * Revision 1.12  2005/03/30 12:03:58  martijn
- * changed wildcard handling in processRequest()
- *
- * Revision 1.11  2005/03/04 12:03:26  tom
- * SAMService configuration now appends html/ to the working dir
- *
- * Revision 1.10  2005/03/02 15:12:07  martijn
- * bugfix setContentType("text/html") is now set when showing the SAMService status page
- *
- * Revision 1.9  2005/03/01 15:29:25  erwin
- * Fixed Javadoc warnings
  *
  * Revision 1.8  2005/02/22 12:03:43  martijn
  * moved org.aselect.utils to org.aselect.system.utils
@@ -64,7 +36,6 @@
  * changed all variable names to naming convention
  *
  */
-
 package org.aselect.system.sam.service;
 
 import java.io.BufferedReader;
@@ -437,9 +408,9 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 * Supports SOAP 1.1, SOAP 1.2 requests as a HTTP POST and supports HTTP GET with an empty query string to show the
 	 * SAM statistics page or a RAW SAM request message. <br>
 	 * 
-	 * @param oHttpServletRequest
+	 * @param servletRequest
 	 *            the o http servlet request
-	 * @param oHttpServletResponse
+	 * @param servletResponse
 	 *            the o http servlet response
 	 * @throws ServletException
 	 *             the servlet exception
@@ -449,7 +420,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	@Override
-	protected void service(HttpServletRequest oHttpServletRequest, HttpServletResponse oHttpServletResponse)
+	protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ServletException, IOException
 	{
 		String sMethod = "service";
@@ -457,38 +428,33 @@ public abstract class SAMServiceServlet extends HttpServlet
 		Communicator oCommunicator = null;
 
 		try {
-			setDisableCachingHttpHeaders(oHttpServletRequest, oHttpServletResponse);
-			_sContextUrl = oHttpServletRequest.getContextPath();
+			PrintWriter pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
-			String sHTTPMethod = oHttpServletRequest.getMethod();
+			_sContextUrl = servletRequest.getContextPath();
+			String sHTTPMethod = servletRequest.getMethod();
 			if (sHTTPMethod.equalsIgnoreCase("GET"))// if request is a HTTP GET
 			{
-				String sQueryString = oHttpServletRequest.getQueryString();
+				String sQueryString = servletRequest.getQueryString();
 				if (sQueryString != null) {
 					if (sQueryString.equalsIgnoreCase("status")) {
-						oHttpServletResponse.setContentType("text/html; charset=utf-8");
 						// display status info
-						showSAMStatusPage(oHttpServletResponse.getWriter(), getSAMInfo());
+						showSAMStatusPage(pwOut, getSAMInfo());
 					}
-					else {
-						// SAM uses RawCommunication
+					else {  // SAM uses RawCommunication
 						oMsgCreator = new RawMessageCreator(getSystemLogger());
 						oCommunicator = new Communicator(oMsgCreator);
-						processRequest(oCommunicator, oHttpServletRequest, oHttpServletResponse);
+						processRequest(oCommunicator, servletRequest, servletResponse);
 					}
 				}
-				else {
-					oHttpServletResponse.setContentType("text/html; charset=utf-8");
-					// display status refresh page
-					String sTargetUrl = oHttpServletRequest.getRequestURL().append("?status").toString();
-					showSAMPage(oHttpServletResponse.getWriter(), sTargetUrl);
+				else {  // display status refresh page
+					String sTargetUrl = servletRequest.getRequestURL().append("?status").toString();
+					showSAMPage(pwOut, sTargetUrl);
 				}
 			}
-			else if (sHTTPMethod.equalsIgnoreCase("POST"))// if request is a HTTP
-			// POST
-			{
-				String sContentType = oHttpServletRequest.getContentType();
-				String sRequestUrl = oHttpServletRequest.getRequestURL().toString();
+			else if (sHTTPMethod.equalsIgnoreCase("POST")) {  // if request is a HTTP POST
+
+				String sContentType = servletRequest.getContentType();
+				String sRequestUrl = servletRequest.getRequestURL().toString();
 
 				if (sContentType.indexOf("text/xml") > -1) {// must be a SOAP11 message
 					oMsgCreator = new SOAP11MessageCreator(sRequestUrl, "Status", getSystemLogger());
@@ -497,14 +463,14 @@ public abstract class SAMServiceServlet extends HttpServlet
 					oMsgCreator = new SOAP12MessageCreator(sRequestUrl, "Status", getSystemLogger());
 				}
 				oCommunicator = new Communicator(oMsgCreator);
-				processRequest(oCommunicator, oHttpServletRequest, oHttpServletResponse);
+				processRequest(oCommunicator, servletRequest, servletResponse);
 			}
 		}
 		catch (Exception e) {
 			getSystemLogger().log(Level.SEVERE, MODULE, sMethod, "Internal error", e);
-			if (!oHttpServletResponse.isCommitted()) {
+			if (!servletResponse.isCommitted()) {
 				// send response if no headers have been written
-				oHttpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal error");
+				servletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal error");
 			}
 		}
 	}
@@ -545,7 +511,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 		IProtocolResponse protResponse = new ServletResponseWrapper(oHttpServletResponse);
 
 		try {
-			if (!oCommunicator.init(protRequest, protResponse)) {
+			if (!oCommunicator.comInit(protRequest, protResponse)) {
 				throw new Exception("Could not parse SAM Request");
 			}
 			// read input message
@@ -598,7 +564,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 
 			oOutputMessage.setParam("samversion", "1.0");
 			oOutputMessage.setParam("get", saResult);
-			if (!oCommunicator.send()) {
+			if (!oCommunicator.comSend()) {
 				throw new Exception("Could not send response message");
 			}
 		}

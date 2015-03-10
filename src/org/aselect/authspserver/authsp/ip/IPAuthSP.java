@@ -255,6 +255,8 @@ public class IPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodie
 		String sLanguage = null;
 
 		try {
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+
 			String sQueryString = servletRequest.getQueryString();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "IP GET {"+servletRequest+", sQueryString="+sQueryString);
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
@@ -264,10 +266,6 @@ public class IPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodie
 			String sCountry = (String) htServiceRequest.get("country");  // optional country code
 			if (sCountry == null || sCountry.trim().length() < 1)
 				sCountry = null;
-			
-			servletResponse.setContentType("text/html; charset=utf-8");
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
-			pwOut = servletResponse.getWriter();
 
 			String sMyUrl = servletRequest.getRequestURL().toString();
 			htServiceRequest.put("my_url", sMyUrl);

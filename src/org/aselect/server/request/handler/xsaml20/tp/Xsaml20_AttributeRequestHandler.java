@@ -33,6 +33,7 @@ import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Decoder;
+import org.aselect.system.utils.Utils;
 import org.opensaml.saml2.core.Assertion;
 import org.opensaml.saml2.core.AttributeStatement;
 import org.opensaml.xml.Configuration;
@@ -120,22 +121,24 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest,
 	 * javax.servlet.http.HttpServletResponse)
 	 */
-	public RequestState process(HttpServletRequest request, HttpServletResponse response)
+	public RequestState process(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		// SUGGEST allow for direct transient ID handling
 		String sMethod = "process";
-		String sPathInfo = request.getPathInfo();
+		String sPathInfo = servletRequest.getPathInfo();
+		PrintWriter pwOut = null;
+		
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "==== Path=" + sPathInfo + " TokenRequestQuery: "
-				+ request.getQueryString());
-		samlrequest = request.getParameter(PARM_NAME_SAMLREQUEST);
+				+ servletRequest.getQueryString());
+		samlrequest = servletRequest.getParameter(PARM_NAME_SAMLREQUEST);
 		if (samlrequest == null) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Request: " + request.getQueryString()
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Request: " + servletRequest.getQueryString()
 					+ " is not recognized");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 		// Check if we support the requested encoding
-		encoding = request.getParameter(PARM_NAME_ENCODING);
+		encoding = servletRequest.getParameter(PARM_NAME_ENCODING);
 		if (encoding != null && !PARM_VALUE_ENCODING_BASE64.equalsIgnoreCase(encoding)) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Requested encoding: " + encoding + " not supported");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -143,8 +146,9 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 		// createtgt = request.getParameter(PARM_NAME_CREATETGT);
 
 		try {
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 			// RM_61_05
-			handleAttributeRequest(request, response);
+			handleAttributeRequest(servletRequest, servletResponse, pwOut);
 		}
 		catch (IOException e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, e.getMessage());
@@ -168,15 +172,11 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	protected void handleAttributeRequest(HttpServletRequest request, HttpServletResponse response)
+	protected void handleAttributeRequest(HttpServletRequest request, HttpServletResponse response, PrintWriter pwOut)
 	throws IOException, ASelectException
 	{
-
 		String sMethod = "handleAttributeRequest";
 
-		response.setHeader("Pragma", "no-cache");
-		response.setHeader("Cache-Control", "no-cache, no-store");
-		PrintWriter pwOut = response.getWriter();
 		String[] atts = request.getParameterValues(PARM_NAME_ATRRIBUTES);
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "attributes=" + atts);
 		for (int i = 0; i < atts.length; i++) {
@@ -248,7 +248,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 				}
 				subject = assertion.getSubject().getNameID().getValue();
 			}
-			else { // 
+			else {
 				subject = token;
 			}
 
@@ -284,12 +284,11 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Request: " + samlrequest + " is not supported");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-		response.setContentType("text/RFC822-Headers");
+		response.setContentType("text/RFC822-Headers");  // overwrite type from prepareForHtmlOutput()
 		// Add returnstring also as custom header "atrributes"
 		response.setHeader("X-" + PARM_NAME_ATRRIBUTES, returnstring);
 		pwOut.write(returnstring);
-
-		pwOut.close();
+		// Caller closes pwOut
 	}
 
 	/**

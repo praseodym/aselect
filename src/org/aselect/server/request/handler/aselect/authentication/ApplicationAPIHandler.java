@@ -191,7 +191,6 @@ package org.aselect.server.request.handler.aselect.authentication;
 
 import java.security.MessageDigest;
 import java.security.PublicKey;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.logging.Level;
 
@@ -220,7 +219,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
-import org.joda.time.DateTime;
 import org.opensaml.saml2.core.Assertion;
 
 /**

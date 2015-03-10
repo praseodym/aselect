@@ -60,7 +60,6 @@ package org.aselect.system.communication.server.raw;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -185,10 +184,10 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	 * @return true, if inits the
 	 * @throws ASelectCommunicationException
 	 *             the select communication exception
-	 * @see org.aselect.system.communication.server.IMessageCreatorInterface#init(org.aselect.system.communication.server.IProtocolRequest,
+	 * @see org.aselect.system.communication.server.IMessageCreatorInterface#soapInit(org.aselect.system.communication.server.IProtocolRequest,
 	 *      org.aselect.system.communication.server.IProtocolResponse)
 	 */
-	public boolean init(IProtocolRequest oRequest, IProtocolResponse oResponse)
+	public boolean soapInit(IProtocolRequest oRequest, IProtocolResponse oResponse)
 	throws ASelectCommunicationException
 	{
 		_oRequest = oRequest;
@@ -534,9 +533,9 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	 * @return true, if send
 	 * @throws ASelectCommunicationException
 	 *             the a select communication exception
-	 * @see org.aselect.system.communication.server.IOutputMessage#send()
+	 * @see org.aselect.system.communication.server.IOutputMessage#soapSend()
 	 */
-	public boolean send()
+	public boolean soapSend()
 	throws ASelectCommunicationException
 	{
 		String sMethod = "send";
@@ -585,15 +584,14 @@ public class RawMessageCreator implements IMessageCreatorInterface
 		String sMethod = "sendMessage";
 		boolean bRetVal = false;
 		try {
-//			OutputStream oStream = _oResponse.getOutputStream();
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "getOutPutStream");
 			BufferedOutputStream oStream = new BufferedOutputStream(_oResponse.getOutputStream());
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Sending message:" + sMsg);
 			oStream.write(sMsg.getBytes());
 			oStream.close();	// close() on BufferedOutputStream calls flush()
 			bRetVal = true;
 		}
-		catch (IOException eIO) // couldn't write response to requester
-		{
+		catch (IOException eIO) {  // couldn't write response to requester
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error sending message", eIO);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO);
 		}
@@ -639,5 +637,4 @@ public class RawMessageCreator implements IMessageCreatorInterface
 		}
 		return sbBuffer;
 	}
-
 }

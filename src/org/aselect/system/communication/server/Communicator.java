@@ -93,12 +93,12 @@ public class Communicator
 	 *         False - if initialisation fails.
 	 * @throws ASelectCommunicationException
 	 *             If communication fails.
-	 * @see IMessageCreatorInterface#init(IProtocolRequest, IProtocolResponse)
+	 * @see IMessageCreatorInterface#soapInit(IProtocolRequest, IProtocolResponse)
 	 */
-	public boolean init(IProtocolRequest oRequest, IProtocolResponse oResponse)
+	public boolean comInit(IProtocolRequest oRequest, IProtocolResponse oResponse)
 	throws ASelectCommunicationException
 	{
-		return _oCreator.init(oRequest, oResponse);
+		return _oCreator.soapInit(oRequest, oResponse);
 	}
 
 	/**
@@ -154,12 +154,12 @@ public class Communicator
 	 * @return true id sent succesfull.
 	 * @throws ASelectCommunicationException
 	 *             If communciation fails.
-	 * @see IMessageCreatorInterface#send()
+	 * @see IMessageCreatorInterface#soapSend()
 	 */
-	public boolean send()
+	public boolean comSend()
 	throws ASelectCommunicationException
 	{
 		// call the send from the Message Creator
-		return _oCreator.send();
+		return _oCreator.soapSend();
 	}
 }

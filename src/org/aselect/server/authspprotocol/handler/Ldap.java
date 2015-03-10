@@ -84,7 +84,6 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.logging.Level;
 
-import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -993,7 +992,8 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 *            the server id
 	 * @throws ASelectException
 	 */
-	private void showDirectLoginForm(HttpServletRequest servletRequest, HashMap htServiceRequest, HashMap htSessionContext, PrintWriter pwOut, String sServerId)
+	private void showDirectLoginForm(HttpServletRequest servletRequest, HashMap htServiceRequest,
+			HashMap htSessionContext, PrintWriter pwOut, String sServerId)
 	throws ASelectException
 	{
 		String sMethod = "showDirectLoginForm";

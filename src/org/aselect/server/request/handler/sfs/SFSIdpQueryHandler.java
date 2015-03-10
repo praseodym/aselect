@@ -147,9 +147,9 @@ public class SFSIdpQueryHandler extends AbstractRequestHandler
 	/**
 	 * Main process function.
 	 * 
-	 * @param request
+	 * @param servletRequest
 	 *            the request
-	 * @param response
+	 * @param servletResponse
 	 *            the response
 	 * @return the request state
 	 * @throws ASelectException
@@ -157,7 +157,7 @@ public class SFSIdpQueryHandler extends AbstractRequestHandler
 	 * @see org.aselect.server.request.handler.AbstractRequestHandler#process(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
-	public RequestState process(HttpServletRequest request, HttpServletResponse response)
+	public RequestState process(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		boolean bContinue = true;
@@ -172,7 +172,7 @@ public class SFSIdpQueryHandler extends AbstractRequestHandler
 			}
 			else {
 				if (_sMySharedSecret != null) {
-					String sSharedSecret = request.getParameter("shared_secret");
+					String sSharedSecret = servletRequest.getParameter("shared_secret");
 					if (sSharedSecret == null || !sSharedSecret.equals(_sMySharedSecret)) {
 						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid 'shared_secret' provided.");
 						sbResult = new StringBuffer("result_code=").append(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -219,10 +219,9 @@ public class SFSIdpQueryHandler extends AbstractRequestHandler
 							.append(sEncodedCgiString);
 				}
 			}
-			PrintWriter pwOut = response.getWriter();
+			PrintWriter pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 			pwOut.print(sbResult.toString());
-			if (pwOut != null)
-				pwOut.close();
+			pwOut.close();
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request", e);

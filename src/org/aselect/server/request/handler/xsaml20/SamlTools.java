@@ -12,6 +12,7 @@
 package org.aselect.server.request.handler.xsaml20;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import java.net.URLDecoder;
 import java.security.PrivateKey;
@@ -953,36 +954,21 @@ public class SamlTools
 	/**
 	 * Set saml20 appropriate headers and send the HTTP SOAP response and close the stream.
 	 * 
-	 * @param response
+	 * @param servletResponse
 	 *            , the servletresponse
 	 * @param envelope
 	 *            , the (soapenvelope) string to send
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	public static void sendSOAPResponse(HttpServletResponse response, String envelope)
+	public static void sendSOAPResponse(HttpServletRequest servletRequest, HttpServletResponse servletResponse, String envelope)
 	throws IOException
 	{
-		final String CONTENT_TYPE = "text/xml; charset=utf-8";
-
-		response.setContentType(CONTENT_TYPE);
-		response.setCharacterEncoding("UTF-8");	// RH, 20131230, n
-		response.setHeader("Pragma", "no-cache");
-		response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-
-		// RH, 20131230, so
-//		ServletOutputStream sos = response.getOutputStream();
-//		sos.print(envelope);
-//		sos.println("\r\n\r\n");
-		// RH, 20131230, eo
-		// RH, 20131230, sn
-		java.io.PrintWriter sos = response.getWriter();
-		sos.write(envelope);
-		sos.write("\r\n\r\n\r\n");	// Backward compatibility
-		sos.close();
-		// RH, 20131230, en
+		PrintWriter pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+		pwOut.write(envelope);
+		pwOut.write("\r\n\r\n\r\n");	// Backward compatibility
+		pwOut.close();
 	}
-
 
 	//
 	// Create a new HashMap based on an htSource

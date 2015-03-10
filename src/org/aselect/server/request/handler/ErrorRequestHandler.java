@@ -113,25 +113,25 @@ public class ErrorRequestHandler extends AbstractRequestHandler
 	/**
 	 * Shows the application specific Error page with the appropriate errors. <br>
 	 * <br>
-	 * @param request - the HTTP request
-	 * @param response - the HTTP response
+	 * @param servletRequest - the HTTP request
+	 * @param servletResponse - the HTTP response
 	 * @param sErrorCode - error code to display
 	 * @throws ASelectException - on failure
 	 */
-	protected void showErrorPage(HttpServletRequest request, HttpServletResponse response, String sErrorCode)
+	protected void showErrorPage(HttpServletRequest servletRequest, HttpServletResponse servletResponse, String sErrorCode)
 	throws ASelectException
 	{
 		String sMethod = "showErrorPage";
 		PrintWriter pwOut = null;
-		String _sUserLanguage = request.getParameter("language");
-		String _sUserCountry = request.getParameter("country");
+		String _sUserLanguage = servletRequest.getParameter("language");
+		String _sUserCountry = servletRequest.getParameter("country");
 		
 	
 		if (_sUserLanguage == null || "".equals(_sUserLanguage) || !VALID_LANGS.contains(_sUserLanguage.toLowerCase()) ) {
-			_sUserLanguage = request.getLocale().getLanguage();
+			_sUserLanguage = servletRequest.getLocale().getLanguage();
 		}
 		if ( _sUserCountry == null || "".equals(_sUserCountry) || !VALID_CNTRY.contains(_sUserCountry.toUpperCase()) ) {
-			_sUserCountry = request.getLocale().getCountry();
+			_sUserCountry = servletRequest.getLocale().getCountry();
 		}
 		// Only allow valid locales
 		Locale loc = new Locale(_sUserLanguage, _sUserCountry);
@@ -140,7 +140,7 @@ public class ErrorRequestHandler extends AbstractRequestHandler
 		String sErrorMessage = _configManager.getErrorMessage(MODULE, sErrorCode, _sUserLanguage, _sUserCountry);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM[error] " + sErrorCode + ":" + sErrorMessage);
 		try {
-			String app_id = request.getParameter("app_id");
+			String app_id = servletRequest.getParameter("app_id");
 			app_id = (app_id != null) ? app_id : "";
 			String sFileName = SIAM_DEFAULT_ERROR_FILENAME;
 			if (!"".equals(app_id)) {
@@ -171,10 +171,9 @@ public class ErrorRequestHandler extends AbstractRequestHandler
 			sErrorForm = Utils.replaceString(sErrorForm, "[app_id]", app_id);
 			sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), null, _systemLogger);
 			// updateTemplate() accepts a null session to remove unused special fields!
-			sErrorForm = _configManager.updateTemplate(sErrorForm, null /* no session available */, request);
+			sErrorForm = _configManager.updateTemplate(sErrorForm, null /* no session available */, servletRequest);
 
-			pwOut = response.getWriter();
-			response.setContentType("text/html; charset=utf-8");
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 			pwOut.println(sErrorForm);
 		}
 		catch (IOException e) {

@@ -167,8 +167,7 @@ public class DBAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodie
 		String sLanguage = null;
 
 		try {
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
-			pwOut = servletResponse.getWriter();
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 			String sQueryString = servletRequest.getQueryString();
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
@@ -186,9 +185,7 @@ public class DBAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodie
 			{
 				handleApiRequest(htServiceRequest, servletRequest, pwOut, servletResponse);
 			}
-			else
-			// Browser request
-			{
+			else {  // Browser request
 				String sMyUrl = servletRequest.getRequestURL().toString();
 				htServiceRequest.put("my_url", sMyUrl);
 
@@ -205,7 +202,6 @@ public class DBAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodie
 					throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 				}
 
-				servletResponse.setContentType("text/html; charset=utf-8");
 				// URL decode values
 				sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
 				sUid = URLDecoder.decode(sUid, "UTF-8");
@@ -299,9 +295,7 @@ public class DBAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodie
 			sCountry = null;
 
 		try {
-			servletResponse.setContentType("text/html; charset=utf-8");
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
-			pwOut = servletResponse.getWriter();
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 			String sMyUrl = servletRequest.getRequestURL().toString();
 			String sRid = servletRequest.getParameter("rid");
@@ -700,7 +694,8 @@ public class DBAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodie
 			sbResponse.append("=").append(eAS.getMessage());
 		}
 		// set reponse headers
-		servletResponse.setContentType("application/x-www-form-urlencoded");
+		// Overwrite prepareForHtmlOutput() settings
+		servletResponse.setContentType("application/x-www-form-urlencoded");   
 		servletResponse.setContentLength(sbResponse.length());
 		// respond
 		pwOut.write(sbResponse.toString());

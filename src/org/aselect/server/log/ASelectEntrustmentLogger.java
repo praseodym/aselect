@@ -101,7 +101,7 @@ public class ASelectEntrustmentLogger extends AuthenticationLogger {
 	public void init(Object oEntrustLogging, String sWorkingDir)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		String sEntrustLogTarget = null;
 		Object oEntrustLogTarget = null;
 		ASelectSystemLogger oASelectSystemLogger = null;

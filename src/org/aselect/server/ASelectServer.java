@@ -203,6 +203,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
+import org.aselect.system.utils.Utils;
 
 /**
  * This is the A-Select Server main class. It is responsible for <code>init()</code>ializing and <code>destroy()</code>
@@ -269,8 +270,7 @@ public class ASelectServer extends ASelectHttpServlet
 			super.init(oServletConfig);
 
 			// Create loggers
-			if (_systemLogger != null) // restart
-			{
+			if (_systemLogger != null) { // restart
 				// close de filehandlers
 				_systemLogger.closeHandlers();
 			}
@@ -279,6 +279,7 @@ public class ASelectServer extends ASelectHttpServlet
 				// after initializing the configmanager, the systemlogger is
 				// initialized and will log to the logfile
 				_systemLogger = ASelectSystemLogger.getHandle();
+				Utils.setSysLog(_systemLogger);
 			}
 
 			if (_authenticationLogger != null) // reinit
@@ -492,9 +493,9 @@ public class ASelectServer extends ASelectHttpServlet
 	 * <code>requesthandler</code> package for more information). <br>
 	 * <br>
 	 * 
-	 * @param request
+	 * @param servletRequest
 	 *            The <code>HttpServletRequest</code> object
-	 * @param response
+	 * @param servletResponse
 	 *            The <code>HttpServletResponse</code> object
 	 * @throws ServletException
 	 *             if processing went wrong
@@ -502,47 +503,47 @@ public class ASelectServer extends ASelectHttpServlet
 	 *             if no error could be sent to the HttpServletResponse
 	 */
 	@Override
-	protected void service(HttpServletRequest request, HttpServletResponse response)
+	protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ServletException, IOException
 	{
 		String sMethod = "service";
 		try {
 			// Prevent caching
-			setDisableCachingHttpHeaders(request, response);
+			//PrintWriter pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 			// If we're currently restarting, then halt all processing
 			if (isRestartInProgress()) {
-				response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+				servletResponse.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 				return;
 			}
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "TimerSensor thread="+_timerSensorThread+" this="+this);
 
 			_numRequests++;
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Entering SERVICE {" + " currentTimeMillis T="+System.currentTimeMillis()+", currentThreadId t="+Thread.currentThread().getId()+
-					" nReq="+_numRequests+" "+request.getMethod() + " Query: "+request.getQueryString());
+					" nReq="+_numRequests+" "+servletRequest.getMethod() + " Query: "+servletRequest.getQueryString());
 			//HandlerTools.logCookies(request, _systemLogger);
-			_systemLogger.log(Level.FINEST, MODULE, sMethod, request.getRemoteHost() + " / " + request.getRequestURL()
-					+ " / " + request.getRemoteAddr());
-			_oRequestHandlerFactory.process(request, response);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, servletRequest.getRemoteHost() + " / " + servletRequest.getRequestURL()
+					+ " / " + servletRequest.getRemoteAddr());
+			_oRequestHandlerFactory.process(servletRequest, servletResponse);
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "} Exiting SERVICE" + " currentTimeMillis T=" + System.currentTimeMillis()+", currentThreadId t="+Thread.currentThread().getId()+ "\n====");
 		}
 		catch (ASelectException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "} Exiting SERVICE" + "  currentTimeMillis T=" + System.currentTimeMillis()
-					+", currentThreadId t="+Thread.currentThread().getId()+" ASelectException while processing request: " + e + " commit="+response.isCommitted()+"\n====");
-			if (!response.isCommitted()) {
+					+", currentThreadId t="+Thread.currentThread().getId()+" ASelectException while processing request: " + e + " commit="+servletResponse.isCommitted()+"\n====");
+			if (!servletResponse.isCommitted()) {
 				// send response if no headers have been written
 				if (e.getMessage().equals(Errors.ERROR_ASELECT_INTERNAL_ERROR))
-					response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);  // 500
+					servletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);  // 500
 				else
-					response.sendError(HttpServletResponse.SC_BAD_REQUEST);  // 400
+					servletResponse.sendError(HttpServletResponse.SC_BAD_REQUEST);  // 400
 			}
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "} Exiting SERVICE" + " currentTimeMillis T=" + System.currentTimeMillis()
-					+", currentThreadId t="+Thread.currentThread().getId()+" Exception occurred: " + e +  " commit="+response.isCommitted()+"\n====");
-			if (!response.isCommitted()) {
+					+", currentThreadId t="+Thread.currentThread().getId()+" Exception occurred: " + e +  " commit="+servletResponse.isCommitted()+"\n====");
+			if (!servletResponse.isCommitted()) {
 				// send response if no headers have been written
-				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				servletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 		}
 	}

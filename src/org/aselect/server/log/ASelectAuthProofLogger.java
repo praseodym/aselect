@@ -101,7 +101,7 @@ public class ASelectAuthProofLogger extends AuthenticationLogger {
 	public void init(Object oAuthProofLogging, String sWorkingDir)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		String sAuthProofLogTarget = null;
 		Object oAuthProofLogTarget = null;
 		ASelectSystemLogger oASelectSystemLogger = null;

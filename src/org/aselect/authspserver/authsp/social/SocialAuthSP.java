@@ -117,9 +117,7 @@ public class SocialAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 		String sRid = null;
 		String sSignRid = null;
 		
-		servletResponse.setContentType("text/html; charset=utf-8");	// Content type must be set (before getwriter)
-		setDisableCachingHttpHeaders(servletRequest, servletResponse);
-		PrintWriter pwOut = servletResponse.getWriter();
+		PrintWriter pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 		String sQueryString = servletRequest.getQueryString();
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "qry="+sQueryString);

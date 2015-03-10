@@ -35,104 +35,6 @@
  *
  * Revision 1.35.4.2  2006/01/25 15:35:19  martijn
  * TGTManager rewritten
- *
- * Revision 1.35.4.1  2006/01/13 08:36:49  martijn
- * requesthandlers seperated from core
- *
- * Revision 1.35  2005/09/08 12:46:35  erwin
- * Changed version number to 1.4.2
- *
- * Revision 1.34  2005/04/15 14:02:55  peter
- * javadoc and comment
- *
- * Revision 1.33  2005/04/11 08:38:50  erwin
- * - Fixed problem with cancel support for cross (app_id local_organization check)
- * - Removed commented code
- *
- * Revision 1.32  2005/04/07 13:56:24  martijn
- * made sendRedirect() public
- *
- * Revision 1.31  2005/04/07 13:42:41  tom
- * Added application id to error tgt (Required for signed requests)
- *
- * Revision 1.30  2005/04/07 13:18:58  peter
- * updated attributes in issueCrossTGT
- *
- * Revision 1.29  2005/04/07 13:15:48  martijn
- * update tgt needs always an update of the rid
- *
- * Revision 1.28  2005/04/07 12:12:21  martijn
- * fixed verifyTGT and changed sso_groups code
- *
- * Revision 1.27  2005/04/07 07:34:21  peter
- * optional oldTGT in issueCrossTGT
- *
- * Revision 1.26  2005/04/06 11:37:08  martijn
- * added an verifyTGT() method
- *
- * Revision 1.25  2005/04/06 08:58:12  martijn
- * code updates needed because of TGTIssuer code restyle
- *
- * Revision 1.24  2005/04/05 15:24:45  martijn
- * TGTIssuer.issueTGT() now only needs an optional old tgt and the printwriter isn't needed anymore
- *
- * Revision 1.23  2005/04/05 13:09:53  martijn
- * removes the old tgt if the user already has one in a forced authenticate cituation
- *
- * Revision 1.22  2005/04/05 09:12:09  peter
- * added cross proxy logica
- *
- * Revision 1.21  2005/04/01 14:24:28  peter
- * cross aselect redesign
- *
- * Revision 1.20  2005/03/21 08:38:02  remco
- * issueErrorTGT() now sends an a-select-servert paremeter along, just like the normal issueTGT()
- *
- * Revision 1.19  2005/03/18 13:43:35  remco
- * made credentials shorter (base64 encoding instead of hex representation)
- *
- * Revision 1.18  2005/03/17 14:08:48  remco
- * changed attribute functionality
- *
- * Revision 1.17  2005/03/17 07:59:28  erwin
- * The A-Select server ID is now set with the constructor,
- * instead of reading it from the configuration.
- * All possible errors are checked in the methods
- *
- * Revision 1.16  2005/03/16 11:29:50  martijn
- *
- * Revision 1.15  2005/03/16 11:15:50  martijn
- * Sessions will be verified after retrieving, if it fails an (session exprired) error will be returned
- *
- * Revision 1.14  2005/03/16 09:28:03  martijn
- * The config item 'cookie_domain' will now only be retrieved from the config at startup and not every time the ticket is issued.
- *
- * Revision 1.13  2005/03/14 11:15:06  tom
- * Moved killSession into catch statement, session should only be removed if authentication is succesfull
- *
- * Revision 1.12  2005/03/14 10:24:56  tom
- * Error TGT now only contains a RID and result_code
- *
- * Revision 1.11  2005/03/11 13:15:13  martijn
- * Renamed single-sign-on config item that now will be read once at startup of the config manager.
- *
- * Revision 1.10  2005/03/11 07:24:18  tom
- * Changed error in TGTContext to result_code
- *
- * Revision 1.9  2005/03/11 07:10:02  remco
- * "cancel" request -> "error" request
- *
- * Revision 1.8  2005/03/10 16:21:57  erwin
- * Improved error handling.
- *
- * Revision 1.7  2005/03/10 14:17:45  erwin
- * Improved Javadoc.
- *
- * Revision 1.6  2005/03/09 09:24:50  erwin
- * Renamed and moved errors.
- *
- * Revision 1.5  2005/03/08 14:34:02  martijn
- * Added javadoc and renamed variables to the coding standard
  * 
  */
 package org.aselect.server.tgt;
@@ -457,34 +359,34 @@ public class TGTIssuer
 		}
 	}
 
-/**
- * 
- * @param sRid
- * @param htSessionContext
- * @param sAuthSP
- * @param htAdditional
- * @param servletResponse
- * @param sOldTGT
- * @param redirectToo
- * @param iAuthSPConditions
- * @return
- * @throws ASelectException
- * 
- * Wrapper method to avoid invalid redirection after posting form to user
- */
-	
-public String issueTGTandRedirect(String sRid, HashMap htSessionContext, String sAuthSP, HashMap htAdditional,
-			HttpServletRequest servletRequest, HttpServletResponse servletResponse, String sOldTGT, boolean redirectToo,
-			IAuthSPConditions iAuthSPConditions)
-throws ASelectException
-{
-		setiAuthSPConditions(iAuthSPConditions);
-		String tgt = issueTGTandRedirect( sRid, htSessionContext, sAuthSP, htAdditional,
-				 servletRequest, servletResponse, sOldTGT, redirectToo);
-		setiAuthSPConditions(null);
-		return tgt;
+	/**
+	 * 
+	 * @param sRid
+	 * @param htSessionContext
+	 * @param sAuthSP
+	 * @param htAdditional
+	 * @param servletResponse
+	 * @param sOldTGT
+	 * @param redirectToo
+	 * @param iAuthSPConditions
+	 * @return
+	 * @throws ASelectException
+	 * 
+	 * Wrapper method to avoid invalid redirection after posting form to user
+	 */
 		
-}
+	public String issueTGTandRedirect(String sRid, HashMap htSessionContext, String sAuthSP, HashMap htAdditional,
+				HttpServletRequest servletRequest, HttpServletResponse servletResponse, String sOldTGT, boolean redirectToo,
+				IAuthSPConditions iAuthSPConditions)
+	throws ASelectException
+	{
+			setiAuthSPConditions(iAuthSPConditions);
+			String tgt = issueTGTandRedirect( sRid, htSessionContext, sAuthSP, htAdditional,
+					 servletRequest, servletResponse, sOldTGT, redirectToo);
+			setiAuthSPConditions(null);
+			return tgt;
+			
+	}
 	
 	/**
 	 * Creates a default TGT and redirects the user. <br>
@@ -533,6 +435,8 @@ throws ASelectException
 	throws ASelectException
 	{
 		String sMethod = "issueTGTandRedirect";
+		PrintWriter pwOut = null;
+		
 		try {
 			// 20120403, Bauke: session is passed as a parameter:
 			// HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
@@ -540,6 +444,11 @@ throws ASelectException
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No session found, session expired: " + sRid);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
+
+			// NOTE: Don't create a PrintWriter before using sendRedirect(), could have been called earlier on
+			Utils.prepareForHttpResponse(servletRequest, servletResponse, null/*text/html*/);
+			//pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+
 			String sLocalOrg = null;
 			String sAppId = (String) htSessionContext.get("app_id");
 			
@@ -762,15 +671,14 @@ throws ASelectException
 				// The user must present obo
 				String sSelectForm = org.aselect.server.utils.Utils.presentOnBehalfOf(servletRequest, _configManager,
 //						htSessionContext, sRid, (String)htTGTContext.get("language"), 0 /*step 0, do obo or not */);
-				htSessionContext, sRid, (String)htTGTContext.get("language"), step /*step 0 = do obo or not */);
-				servletResponse.setContentType("text/html; charset=utf-8");
+						htSessionContext, sRid, (String)htTGTContext.get("language"), step /*step 0 = do obo or not */);
 				
 				Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);
 				//_sessionManager.updateSession(sRid, htSessionContext); // Write session
 				// done by pauseSensorData(): _sessionManager.setUpdateSession(htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession()
-				PrintWriter pwOut = servletResponse.getWriter();
+
+				pwOut = servletResponse.getWriter();
 				pwOut.println(sSelectForm);
-				pwOut.close();
 				IAuthSPConditions authspconditions = getiAuthSPConditions();
 				if (authspconditions != null)
 					authspconditions.setOutputAvailable(false);	// We cannot communicate with the user after closing stream
@@ -783,22 +691,19 @@ throws ASelectException
 				// The user must choose his organization
 				String sSelectForm = org.aselect.server.utils.Utils.presentOrganizationChoice(servletRequest, _configManager,
 						htSessionContext, sRid, (String)htTGTContext.get("language"), hUserOrganizations);
-				servletResponse.setContentType("text/html; charset=utf-8");
 				
 				Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);
 				//_sessionManager.updateSession(sRid, htSessionContext); // Write session
 				// done by pauseSensorData(): _sessionManager.setUpdateSession(htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession()
-				PrintWriter pwOut = servletResponse.getWriter();
+				
+				pwOut = servletResponse.getWriter();
 				pwOut.println(sSelectForm);
-				pwOut.close();
 				IAuthSPConditions authspconditions = getiAuthSPConditions();
 				if (authspconditions != null)
 					authspconditions.setOutputAvailable(false);	// We cannot communicate with the user after closing stream
 				return sTgt;
 			}
-			
-			
-			
+
 			if (redirectToo) {
 				// No organization selection, the tgt was just issued, report sensor data
 				// remove the session and send the user to the application
@@ -807,6 +712,7 @@ throws ASelectException
 				
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 				String sLang = (String)htTGTContext.get("language");
+				pwOut = servletResponse.getWriter();
 				sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);
 			}
 			return sTgt;
@@ -822,6 +728,10 @@ throws ASelectException
 			sbError.append(sRid).append("' failed due to internal error");
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+		finally {
+			if (pwOut != null)
+				pwOut.close();
 		}
 	}
 
@@ -992,16 +902,16 @@ throws ASelectException
 	 *            TGT that will be sent with the redirect
 	 * @param sRid
 	 *            RID that will be sent with the redirect
-	 * @param oHttpServletResponse
+	 * @param servletResponse
 	 *            the user that will be redirected
 	 * @throws ASelectException
 	 *             if the user could not be redirected
 	 */
 	// 20100228, Bauke: added language to redirect
-	public void sendTgtRedirect(String sAppUrl, String sTgt, String sRid, HttpServletResponse oHttpServletResponse, String sLanguage)
+	public void sendTgtRedirect(String sAppUrl, String sTgt, String sRid, HttpServletResponse servletResponse, String sLanguage)
 	throws ASelectException
 	{
-		String sMethod = "sendRedirect";
+		String sMethod = "sendTgtRedirect";
 		StringBuffer sbRedirect = null;
 
 		// NOTE: the SessionContext is already killed (therefore no pauseSensorData())
@@ -1036,7 +946,7 @@ throws ASelectException
 				sbRedirect.append("&language=").append(sLanguage);
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to: " + sbRedirect);
-			oHttpServletResponse.sendRedirect(sbRedirect.toString());
+			servletResponse.sendRedirect(sbRedirect.toString());  // xyzzy
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not send redirect to: "
@@ -1130,11 +1040,12 @@ throws ASelectException
 							BufferedReader oInputReader = new BufferedReader(new InputStreamReader(iStream), 16000);
 							sResponse = oInputReader.readLine();
 							oInputReader.close();
-				
-						} catch (MalformedURLException mue) {
+						}
+						catch (MalformedURLException mue) {
 							_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid URL:"+ _sAuthspURL + " for authsp: " + _sAuthSP);
 							
-						}catch (IOException ioe) {
+						}
+						catch (IOException ioe) {
 							_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not reach authsp: " + _sAuthSP);
 						}
 						// verify response here

@@ -154,7 +154,7 @@ public class JDBCConnector implements IUDBConnector
 	public void init(Object oConfigSection)
 	throws ASelectUDBException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		_oASelectConfigManager = ASelectConfigManager.getHandle();
 		_oASelectSystemLogger = ASelectSystemLogger.getHandle();
 		_oASelectAuthenticationLogger = ASelectAuthenticationLogger.getHandle();
@@ -435,7 +435,7 @@ public class JDBCConnector implements IUDBConnector
 	public String getUserAttributes(String sUserId, String sAuthSPId)
 	throws ASelectUDBException
 	{
-		String sMethod = "getUserAttributes()";
+		String sMethod = "getUserAttributes";
 
 		String sAttributes = null;
 		Connection oConnection = null;
@@ -642,7 +642,7 @@ public class JDBCConnector implements IUDBConnector
 	private Connection getConnection()
 	throws ASelectUDBException, ASelectSAMException
 	{
-		String sMethod = "getConnection()";
+		String sMethod = "getConnection";
 
 		Connection oConnection = null;
 		SAMResource oSAMResource = null;

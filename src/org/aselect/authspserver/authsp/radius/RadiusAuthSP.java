@@ -282,9 +282,7 @@ public class RadiusAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 			if (sCountry == null || sCountry.trim().length() < 1)
 				sCountry = null;
 
-			servletResponse.setContentType("text/html; charset=utf-8");
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
-			pwOut = servletResponse.getWriter();
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 			String sMyUrl = servletRequest.getRequestURL().toString();
 			htServiceRequest.put("my_url", sMyUrl);
@@ -321,10 +319,8 @@ public class RadiusAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 			if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
 				StringBuffer sbWarning = new StringBuffer("Invalid signature from A-Select Server '");
 				sbWarning.append(sAsId);
-				sbWarning.append("' for user: ");
-				sbWarning.append(sUid);
+				sbWarning.append("' for user: ").append(sUid);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
-
 				throw new ASelectException(Errors.ERROR_RADIUS_INVALID_REQUEST);
 			}
 
@@ -396,9 +392,7 @@ public class RadiusAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 			sCountry = null;
 		
 		try {
-			pwOut = servletResponse.getWriter();
-			servletResponse.setContentType("text/html; charset=utf-8");
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 			String sMyUrl = servletRequest.getRequestURL().toString();
 			String sRid = servletRequest.getParameter("rid");

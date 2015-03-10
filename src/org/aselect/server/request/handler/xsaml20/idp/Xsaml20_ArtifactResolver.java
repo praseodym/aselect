@@ -264,7 +264,7 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Writing SOAP message:\n" + XMLHelper.nodeToString(envelopeElem));
 
 			// Bauke: added, it's considered polite to tell the other side what we are sending
-			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));  // x_AssertionConsumer_x
+			SamlTools.sendSOAPResponse(request, response, XMLHelper.nodeToString(envelopeElem));  // x_AssertionConsumer_x
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error", e);

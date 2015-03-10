@@ -183,21 +183,21 @@ public class ResourceSTS extends ProtoRequestHandler
 	/**
 	 * Process return.
 	 * 
-	 * @param request
+	 * @param servletRequest
 	 *            the request
-	 * @param response
+	 * @param servletResponse
 	 *            the response
 	 * @return the request state
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	public RequestState processReturn(HttpServletRequest request, HttpServletResponse response)
+	public RequestState processReturn(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		String sMethod = "processReturn";
 		// String sPwa = request.getParameter("wa");
-		String sPwresult = request.getParameter("wresult");
-		String sPwctx = request.getParameter("wctx"); // POST to this URL (the protected resource)
+		String sPwresult = servletRequest.getParameter("wresult");
+		String sPwctx = servletRequest.getParameter("wctx"); // POST to this URL (the protected resource)
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Token IN: RequestorToken wresult=" + sPwresult
 				+ ", ReplyTo wctx=" + sPwctx);
 
@@ -227,7 +227,7 @@ public class ResourceSTS extends ProtoRequestHandler
 			String sAudience = null; // "urn:federation:treyresearch";
 			// String sNameIdFormat = "http://schemas.xmlsoap.org/claims/UPN";
 			// String sProviderId = "http://www.anoigo.nl/wsfed_sp.xml";
-			String sRequestorToken = createRequestorToken(request, _sProviderId, sUid, _sUserDomain, _sNameIdFormat,
+			String sRequestorToken = createRequestorToken(servletRequest, _sProviderId, sUid, _sUserDomain, _sNameIdFormat,
 					sAudience, htAttributes, null);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Token OUT: RequestorToken=" + sRequestorToken);
 
@@ -235,7 +235,7 @@ public class ResourceSTS extends ProtoRequestHandler
 			sInputs += buildHtmlInput("wctx", Tools.htmlEncode(sPwctx));
 			sInputs += buildHtmlInput("wresult", Tools.htmlEncode(sRequestorToken));
 
-			handlePostForm(_sPostTemplate, Tools.htmlEncode(sPwctx), sInputs, response);
+			handlePostForm(_sPostTemplate, Tools.htmlEncode(sPwctx), sInputs, servletRequest, servletResponse);
 			return new RequestState(null);
 		}
 		catch (SAMLException e) {

@@ -12,6 +12,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -25,6 +26,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.storagemanager.StorageManager;
+import org.aselect.system.utils.Utils;
 import org.opensaml.common.SAMLObject;
 import org.opensaml.saml2.binding.artifact.SAML2ArtifactType0004;
 import org.opensaml.ws.message.encoder.MessageEncodingException;
@@ -78,7 +80,7 @@ public class Saml20_ArtifactManager extends StorageManager
 	 *            SAMLObject.
 	 * @param sAppUrl
 	 *            the s app url
-	 * @param oHttpServletResponse
+	 * @param servletResponse
 	 *            the o http servlet response
 	 * @param sRelayState
 	 *            the s relay state
@@ -88,7 +90,8 @@ public class Saml20_ArtifactManager extends StorageManager
 	 *             the a select storage exception
 	 */
 	public void sendArtifact(String sArtifact, SAMLObject samlObject, String sAppUrl,
-			HttpServletResponse oHttpServletResponse, String sRelayState, String addedPatching)
+			HttpServletRequest servletRequest, HttpServletResponse servletResponse,
+			String sRelayState, String addedPatching)
 	throws IOException, ASelectStorageException
 	{
 		String sMethod = "sendArtifact";
@@ -103,27 +106,31 @@ public class Saml20_ArtifactManager extends StorageManager
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sRedirectUrl);
 		
-		
-		// RH, 20081113, Set appropriate headers here
-		oHttpServletResponse.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-		oHttpServletResponse.setHeader("Pragma", "no-cache");
-		
-		if (bUseRedirect) {
-			oHttpServletResponse.sendRedirect(sRedirectUrl);
+		PrintWriter pwOut = null;
+		try {
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+			
+			if (bUseRedirect) {
+				servletResponse.sendRedirect(sRedirectUrl);
+			}
+			else {	
+				// oHttpServletResponse.sendRedirect(sRedirectUrl);
+				// OR:
+				String htmlResponse = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n"
+						+ "<html><head><title>Redirect</title>\n"
+						+ "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">"
+						+ "<meta http-equiv=\"refresh\" content=\"0;URL=" + sRedirectUrl + "\">"
+						+ "</head><body></body></html>";
+				pwOut.println(htmlResponse);
+			}
 		}
-		else {
-			oHttpServletResponse.setContentType("text/html; charset=utf-8");
-	
-			// oHttpServletResponse.sendRedirect(sRedirectUrl);
-			// OR:
-			PrintWriter out = oHttpServletResponse.getWriter();
-			String htmlResponse = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n"
-					+ "<html><head><title>Redirect</title>\n"
-					+ "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">"
-					+ "<meta http-equiv=\"refresh\" content=\"0;URL=" + sRedirectUrl + "\">"
-					+ "</head><body></body></html>";
-			out.println(htmlResponse);
-			out.close();
+		catch (IOException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "IO Exception", e);
+			throw e;				
+		}
+		finally {
+			if (pwOut != null)
+				pwOut.close();
 		}
 	}
 

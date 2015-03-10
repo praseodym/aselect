@@ -11,6 +11,7 @@
  */
 package org.aselect.server.request.handler.xsaml20.sp;
 
+import java.io.PrintWriter;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -128,14 +129,14 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 	 */
 	@SuppressWarnings("unchecked")
 	protected void handleSpecificSaml20Request(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-						SignableSAMLObject samlMessage, String sRelayState)
+					PrintWriter pwOut, SignableSAMLObject samlMessage, String sRelayState)
 	throws ASelectException
 	{
 		String sMethod = "handleSpecificSaml20Request " + Thread.currentThread().getId();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "PathInfo="+httpRequest.getPathInfo());
 		String sApplicationResource = null;
 		String sPresence = null;
-		
+
 		// The Assertion signature was checked in the Saml20_BrowserHandler already
 		try {
 			Assertion assertObj = (Assertion)samlMessage;

@@ -11,6 +11,7 @@
  */
 package org.aselect.server.request.handler.xsaml20;
 
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.security.PublicKey;
 import java.util.Date;
@@ -130,7 +131,8 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	 *             the a select exception
 	 */
 	abstract protected void handleSpecificSaml20Request(HttpServletRequest httpRequest,
-			HttpServletResponse httpResponse, SignableSAMLObject samlMessage, String sRelayState)
+			HttpServletResponse httpResponse, PrintWriter pwOut,
+			SignableSAMLObject samlMessage, String sRelayState)
 	throws ASelectException;
 
 	/**
@@ -292,6 +294,8 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	throws ASelectException
 	{
 		String sMethod = "handleSAMLMessage";
+		PrintWriter pwOut = null;
+		
 		boolean bIsPostRequest = "POST".equals(httpRequest.getMethod());
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> SAMLMessage received POST="+bIsPostRequest);
 
@@ -361,10 +365,8 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 				}
 			}
 
-			// Set appropriate headers Pragma and Cache-Control
-			httpResponse.setHeader("Pragma", "no-cache");
-			httpResponse.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-			handleSpecificSaml20Request(httpRequest, httpResponse, samlMessage, sRelayState);
+			pwOut = Utils.prepareForHtmlOutput(httpRequest, httpResponse);
+			handleSpecificSaml20Request(httpRequest, httpResponse, pwOut, samlMessage, sRelayState);
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> SAMLMessage handled");
 		}
 		catch (ASelectException e) {
@@ -373,6 +375,10 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+		finally {
+			if (pwOut != null)
+				pwOut.close();
 		}
 	}
 	

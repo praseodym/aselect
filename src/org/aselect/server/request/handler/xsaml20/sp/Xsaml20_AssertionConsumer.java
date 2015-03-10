@@ -11,6 +11,7 @@
  */
 package org.aselect.server.request.handler.xsaml20.sp;
 
+import java.io.PrintWriter;
 import java.io.StringReader;
 import java.security.PublicKey;
 import java.util.Enumeration;
@@ -33,7 +34,6 @@ import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectAuthProofLogger;
 import org.aselect.server.log.ASelectAuthenticationLogger;
-import org.aselect.server.log.ASelectEntrustmentLogger;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.PartnerData;
@@ -196,27 +196,30 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	/**
 	 * Assertion consumer. <br>
 	 * 
-	 * @param request
+	 * @param servletRequest
 	 *            HttpServletRequest.
-	 * @param response
+	 * @param servletResponse
 	 *            HttpServletResponse.
 	 * @return the request state
 	 * @throws ASelectException
 	 *             on failure
 	 */
 	@SuppressWarnings("unchecked")
-	public RequestState process(HttpServletRequest request, HttpServletResponse response)
+	public RequestState process(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		String sMethod = "process";
 		boolean checkAssertionSigning = false;
 		Object samlResponseObject = null;
 		String auth_proof = null;
+		PrintWriter pwOut = null;
 
 		try {
-			String sReceivedArtifact = request.getParameter("SAMLart");
-			String sReceivedResponse = request.getParameter("SAMLResponse");
-			String sRelayState = request.getParameter("RelayState");
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+
+			String sReceivedArtifact = servletRequest.getParameter("SAMLart");
+			String sReceivedResponse = servletRequest.getParameter("SAMLResponse");
+			String sRelayState = servletRequest.getParameter("RelayState");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received artifact: " + sReceivedArtifact + " RelayState="+sRelayState);
 			if ( !(sReceivedArtifact == null || "".equals(sReceivedArtifact)) ) {
 				String sFederationUrl = _sFederationUrl; // default, remove later on, can be null
@@ -521,7 +524,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					}
 					// check subjectlocalityaddress
 					if (isLocalityAddressRequired()
-							&& !SamlTools.checkLocalityAddress(samlAssertion.getAuthnStatements().get(0), request.getRemoteAddr())) {
+							&& !SamlTools.checkLocalityAddress(samlAssertion.getAuthnStatements().get(0), servletRequest.getRemoteAddr())) {
 						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "AuthnStatement subjectlocalityaddress was NOT valid");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
@@ -739,7 +742,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					// End of IdP token
 
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "htRemoteAttributes=" + hmSamlAttributes);
-					handleSSOResponse(_htSessionContext, hmSamlAttributes, request, response);
+					handleSSOResponse(_htSessionContext, hmSamlAttributes, servletRequest, servletResponse);
 				}
 				else {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Response was not successful: " + sStatusCode);
@@ -774,8 +777,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					// 1. handleSSOResponse(htRemoteAttributes, request, response); // Lets application display error
 					// 2. throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED); // Standard server error
 					// 3. Show error page:
-					response.setContentType("text/html; charset=utf-8");
-					showErrorPage(sErrorCode, _htSessionContext, response.getWriter(), request);
+					showErrorPage(sErrorCode, _htSessionContext, pwOut, servletRequest);
 				}
 			}
 			else {  // SLO
@@ -791,13 +793,16 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		finally {
+			if (pwOut != null)
+				pwOut.close();
+			
 			// 20130821, Bauke: save friendly name after session is gone
 			if (_htSessionContext != null) {
 				String sStatus = (String)_htSessionContext.get("status");
 				String sAppId = (String)_htSessionContext.get("app_id");
 				if ("del".equals(sStatus) && Utils.hasValue(sAppId)) {
 					String sUF = ApplicationManager.getHandle().getFriendlyName(sAppId);
-					HandlerTools.setEncryptedCookie(response, "requestor_friendly_name", sUF, _configManager.getCookieDomain(), -1/*age*/, _systemLogger);
+					HandlerTools.setEncryptedCookie(servletResponse, "requestor_friendly_name", sUF, _configManager.getCookieDomain(), -1/*age*/, _systemLogger);
 				}
 			}
 			_oSessionManager.finalSessionProcessing(_htSessionContext, true/*really do it*/);

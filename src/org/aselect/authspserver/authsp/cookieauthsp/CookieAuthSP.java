@@ -183,8 +183,8 @@ public class CookieAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 		String sQueryString = "";
 		String sLanguage = null;
 		
-		servletResponse.setContentType("text/html; charset=utf-8");
-		setDisableCachingHttpHeaders(servletRequest, servletResponse);
+		PrintWriter pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+
 		sQueryString = servletRequest.getQueryString();
 		HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, true);  // URL decoded result
 
@@ -276,14 +276,14 @@ public class CookieAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 				});
 			}
 			
-			handleResult(htServiceRequest, servletResponse, _sAuthMode, sLanguage, _sFailureHandling, htPreviousSessionContext);
+			handleResult(htServiceRequest, servletResponse, pwOut, _sAuthMode, sLanguage, _sFailureHandling, htPreviousSessionContext);
 		}
 		catch (ASelectException e) {
-			handleResult(htServiceRequest, servletResponse, e.getMessage(), sLanguage, _sFailureHandling);
+			handleResult(htServiceRequest, servletResponse, pwOut, e.getMessage(), sLanguage, _sFailureHandling);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error", e);
-			handleResult(htServiceRequest, servletResponse, Errors.ERROR_COOKIE_COULD_NOT_AUTHENTICATE_USER, sLanguage, _sFailureHandling);
+			handleResult(htServiceRequest, servletResponse, pwOut, Errors.ERROR_COOKIE_COULD_NOT_AUTHENTICATE_USER, sLanguage, _sFailureHandling);
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "} NULL GET");
 	}
@@ -309,8 +309,7 @@ public class CookieAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 	{
 		String sMethod = "doPost";
 
-		servletResponse.setContentType("text/html; charset=utf-8");
-		setDisableCachingHttpHeaders(servletRequest, servletResponse);
+		PrintWriter pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "CookieAuthSP POST {" + servletRequest + ", qry="
 				+ servletRequest.getQueryString());
@@ -357,7 +356,7 @@ public class CookieAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 		String response = sbResponse.toString();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Respond with result:" + response);
 		servletResponse.setContentLength(response.length());
-		servletResponse.getWriter().write(response);
+		pwOut.write(response);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "End CookieAuthSP POST");
 	}
@@ -376,11 +375,11 @@ public class CookieAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 		return false;
 	}
 
-	private void handleResult(HashMap servletRequest, HttpServletResponse servletResponse,
+	private void handleResult(HashMap servletRequest, HttpServletResponse servletResponse, PrintWriter pwOut,
 			String sResultCode, String sLanguage, String failureHandling)
 	throws IOException
 	{	
-		handleResult(servletRequest, servletResponse, sResultCode, sLanguage, failureHandling, null);
+		handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage, failureHandling, null);
 	}
 	
 	/**
@@ -396,15 +395,13 @@ public class CookieAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private void handleResult(HashMap servletRequest, HttpServletResponse servletResponse,
+	private void handleResult(HashMap servletRequest, HttpServletResponse servletResponse, PrintWriter pwOut,
 					String sResultCode, String sLanguage, String failureHandling, Hashtable previousSessionContext)
 	throws IOException
 	{
 		String sMethod = "handleResult";
 
-		PrintWriter pwOut = null;
 		try {
-			pwOut = servletResponse.getWriter();
 			if (failureHandling.equalsIgnoreCase(DEFAULT_FAILUREHANDLING) || sResultCode.equals(Errors.ERROR_COOKIE_SUCCESS)) {
 				String sRid = (String)servletRequest.get("rid");
 				String sAsUrl = (String)servletRequest.get("as_url");

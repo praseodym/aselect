@@ -62,7 +62,7 @@ public class DataCommunicator
 	 * @throws ASelectCommunicationException
 	 *             If communication with the server fails.
 	 */
-	public static String send(SystemLogger systemLogger, String sMessage, String sUrl)
+	public static String dataComSend(SystemLogger systemLogger, String sMessage, String sUrl)
 	throws MalformedURLException, ASelectCommunicationException
 	{
 		String sMethod = "send";

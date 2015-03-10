@@ -457,6 +457,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @see org.aselect.server.request.handler.aselect.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap,
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
+	// NOTE: pwOut is closed by the caller!!!
 	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
@@ -521,7 +522,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.FINEST, _sModule, sMethod, "ApplBrowREQ request=null sUrl=" + sUrl+" aselect_credentials_uid="+sAsUid);
 
 			if (sAsUid != null)
-				showUserInfo(htServiceRequest, _servletResponse);  // pauses sensor
+				showUserInfo(htServiceRequest, _servletResponse, pwOut);  // pauses sensor
 			else {
 				String sServerInfoForm = _configManager.getHTMLForm("serverinfo", _sUserLanguage, _sUserCountry);
 				sServerInfoForm = Utils.replaceString(sServerInfoForm, "[message]", " ");
@@ -540,8 +541,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				if (_htSessionContext != null)
 					_htSessionContext.put("user_state", "state_serverinfo");
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
+				
 				pwOut.println(sServerInfoForm);
-				pwOut.close();
 			}
 		}
 		else if (sRequest.equals("logout")) {
@@ -567,7 +568,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		
 		// handle OnBehalfOf
 		else if ( sRequest.equals("obo_choice")) {
-			handleOnBehalfOf(htServiceRequest, _servletResponse);
+			handleOnBehalfOf(htServiceRequest, _servletResponse, pwOut);
 		}
 		else if (sRequest.equals("alive")) {
 			pwOut.println("<html><body>Server is ALIVE</body></html>");
@@ -721,7 +722,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void handleOnBehalfOf(HashMap htServiceRequest, HttpServletResponse servletResponse)
+	private void handleOnBehalfOf(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
 		String sMethod = "handleOnBehalfOf";
@@ -767,18 +768,18 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					String sSelectForm;
 					sSelectForm = org.aselect.server.utils.Utils.presentOnBehalfOf(_servletRequest, _configManager,
 							htServiceRequest, null, (String)_htTGTContext.get("language"), 1 /* step 1, present obo request */);
-					servletResponse.setContentType("text/html; charset=utf-8");
 					
 					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
-					PrintWriter pwOut = servletResponse.getWriter();
+
 					pwOut.println(sSelectForm);
-					pwOut.close();
-				} catch (IOException e) {
+				}
+				catch (IOException e) {
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Cannot present OnBehalfOf form");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 				return;
-			} else {	// no obo requested
+			}
+			else {	// no obo requested
 				_systemLogger.log(Level.FINEST, _sModule, sMethod, "No obo requested by user");
 			}
 			
@@ -918,7 +919,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_tgtManager.updateTGT(sTgt, _htTGTContext);
 				
 				ASelectEntrustmentLogger.getHandle().log((String)_htTGTContext.get("uid"), (String)_htTGTContext.get("client_ip"), (String)_htTGTContext.get("app_id"), sOBOId, status);
-			} else {	// not a bsn or invalid obo
+			}
+			else {	// not a bsn or invalid obo
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "Invalid bsn for obo, status: " + status );
 				ASelectEntrustmentLogger.getHandle().log((String)_htTGTContext.get("uid"), (String)_htTGTContext.get("client_ip"), (String)_htTGTContext.get("app_id"), sOBOId, status);
 				_systemLogger.log(Level.FINEST, _sModule, sMethod, "Retrying, retry number:" +iOboRetries);
@@ -931,13 +933,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					String sSelectForm;
 					sSelectForm = org.aselect.server.utils.Utils.presentOnBehalfOf(_servletRequest, _configManager,
 							htServiceRequest, null, (String)_htTGTContext.get("language"), 2 /* step 2, retry obo */);
-					servletResponse.setContentType("text/html; charset=utf-8");
 					
 					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
-					PrintWriter pwOut = servletResponse.getWriter();
+
 					pwOut.println(sSelectForm);
-					pwOut.close();
-				} catch (IOException e) {
+				}
+				catch (IOException e) {
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Cannot present OnBehalfOf form");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
@@ -959,8 +960,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIRECT to " + sAppUrl);
 
 		_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
-		
-		
+
 		TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 		String sLang = (String)_htTGTContext.get("language");
 		oTGTIssuer.sendTgtRedirect(sAppUrl, sTgt, null, servletResponse, sLang);
@@ -1111,8 +1111,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							Utils.copyHashmapValue("sp_assert_url", _htTGTContext, _htSessionContext);
 							/////////////////////////////////////////////////////////////////////////////////////
 							//	RH, 20140925, en
-							
-							
+
 							_tgtManager.updateTGT(sTgt, _htTGTContext);
 							
 							// 20100210, Bauke: Present the Organization selection to the user
@@ -1124,12 +1123,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 								// The user must choose his organization
 								String sSelectForm = org.aselect.server.utils.Utils.presentOrganizationChoice(_servletRequest,
 										_configManager, _htSessionContext, sRid, (String)_htTGTContext.get("language"), hUserOrganizations);
-								_servletResponse.setContentType("text/html; charset=utf-8");
+
 								pwOut.println(sSelectForm);
-								pwOut.close();
 								return;
 							}
-
 
 							// Redirect to application as user has already a valid tgt
 							// RH, 20140925, so
@@ -1143,7 +1140,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// RH, 20140925, eo
 							String sRedirectUrl = extractRedirectURL(_htSessionContext);		// RH, 20140925, n
 
-							
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
 							// 20111101, Bauke: added Sensor
 							Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
@@ -1226,6 +1222,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);
 						Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 						//_sessionManager.update(sRid, _htSessionContext); // Write session
+
 						pwOut.println(sNextauthspForm);						
 						return;
 					}
@@ -1342,7 +1339,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-//	private void handleLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	private int handleLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
@@ -1396,12 +1392,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 								sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
 								sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
 								sSelectForm = Utils.replaceString(sSelectForm, "[handler_url]", sIsts);
-								servletResponse.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-								servletResponse.setContentType("text/html; charset=utf-8");
-								servletResponse.setHeader("Pragma", "no-cache");
 								Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102 can update the session
+								
 								pwOut.println(sSelectForm);
-								pwOut.close();
 								return 0;
 							}
 
@@ -1561,11 +1554,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					htServiceRequest.put("forced_authsp", sForcedAuthsp);
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "Forced uid:"+sForcedUid+" OR forced authsp:"+sForcedAuthsp+", to login2");
 				handleLogin2(htServiceRequest, servletResponse, pwOut);
-//				int rc = handleLogin2(htServiceRequest, servletResponse, pwOut);
 				int rc = 0;
 				_systemLogger.log(Level.FINEST, _sModule, sMethod, "Return, rc=" + rc);
-//				return rc;
-				return 0;
+				return rc;
 			}
 
 			// Show login (user_id) form
@@ -1595,7 +1586,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sSpecials = Utils.getAselectSpecials(_htSessionContext, true/*decode too*/, _systemLogger);
 			sLoginForm = Utils.handleAllConditionals(sLoginForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 			
-			servletResponse.setContentType("text/html; charset=utf-8");
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			//_sessionManager.update(sRid, _htSessionContext); // Write session
 			_htSessionContext.put("user_state", "state_login");
@@ -1719,7 +1709,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_htSessionContext.put("user_state", "state_session_info");
 		sInfoForm = Utils.replaceString(sInfoForm, "[other_sps]", sOtherSPs);
 		sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext, _servletRequest);
-		servletResponse.setContentType("text/html; charset=utf-8");
 		Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 		//_sessionManager.update(sRid, _htSessionContext); // Write session
 		_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
@@ -1800,17 +1789,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					.append("&a-select-server=").append(_sMyServerId).append("&consent=false");
 			_sConsentForm = Utils.replaceString(_sConsentForm, "[cancel]", sCancel.toString());
 
-			servletResponse.setContentType("text/html; charset=utf-8");
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "Display ConsentForm");
 			pwOut.println(_sConsentForm);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to display ConsentForm: ", e);
-		}
-		finally {
-			if (pwOut != null) {
-				pwOut.close();
-			}
 		}
 		return false; // means: Consent Form displayed, no consent available yet
 	}
@@ -3311,120 +3294,111 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void showUserInfo(HashMap htServiceRequest, HttpServletResponse response)
+	private void showUserInfo(HashMap htServiceRequest, HttpServletResponse response, PrintWriter pwOut)
 	throws ASelectException
 	{
 		String sMethod = "showUserInfo";
 		String sTemp;
-		PrintWriter pwOut = null;
 
-		try {  // get output writer
-			pwOut = response.getWriter();
+		String sUserId = (String) htServiceRequest.get("aselect_credentials_uid");
+		String sMyUrl = (String) htServiceRequest.get("my_url");
+		String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
 
-			String sUserId = (String) htServiceRequest.get("aselect_credentials_uid");
-			String sMyUrl = (String) htServiceRequest.get("my_url");
-			String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
+		String sUserInfoForm = _configManager.getHTMLForm("userinfo", _sUserLanguage, _sUserCountry);
+		sUserInfoForm = Utils.replaceString(sUserInfoForm, "[uid]", sUserId);
+		sUserInfoForm = Utils.replaceString(sUserInfoForm, "[a-select-server]", _sMyServerId);
+		sUserInfoForm = Utils.replaceString(sUserInfoForm, "[aselect_url]", sMyUrl);
 
-			String sUserInfoForm = _configManager.getHTMLForm("userinfo", _sUserLanguage, _sUserCountry);
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[uid]", sUserId);
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[a-select-server]", _sMyServerId);
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[aselect_url]", sMyUrl);
+		// 20120712, Bauke, not needed, ASelectAuthenticationProfile has already read the TGT
+		// HashMap _htTGTContext = _tgtManager.getTGT(sTgt);
+		try {
+			long lExpTime = _tgtManager.getExpirationTime(sTgt);
+			sTemp = new Date(lExpTime).toString();
+			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_exp_time]", sTemp);
+		}
+		catch (ASelectStorageException e) {
+			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_exp_time]", "[unknown]");
+		}
 
-			// 20120712, Bauke, not needed, ASelectAuthenticationProfile has already read the TGT
-			// HashMap _htTGTContext = _tgtManager.getTGT(sTgt);
+		// In case the SAML20 logout procedure reaches this handler:
+		String sEncTgt = CryptoEngine.getHandle().encryptTGT(Utils.hexStringToByteArray(sTgt));
+		sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_blob]", sEncTgt);
+		// End of SAML20 patch
+
+		sTemp = (String) _htTGTContext.get("app_id");
+		// RH, 20100805, Experimental insert of friendly_name
+		String sFName = _applicationManager.getFriendlyName(sTemp);
+		sUserInfoForm = Utils.replaceString(sUserInfoForm, "[friendly_name]", sFName);  // backward compatibility
+		sUserInfoForm = Utils.replaceString(sUserInfoForm, "[requestor_friendly_name]", sFName);  // 20130822, Bauke: added
+		
+		if (sTemp == null)
+			sTemp = "[unknown]";
+		sUserInfoForm = Utils.replaceString(sUserInfoForm, "[app_id]", sTemp);
+		sUserInfoForm = _configManager.updateTemplate(sUserInfoForm, null/*no session*/, _servletRequest);
+
+		sTemp = (String) _htTGTContext.get("authsp");
+		if (sTemp != null) {
 			try {
-				long lExpTime = _tgtManager.getExpirationTime(sTgt);
-				sTemp = new Date(lExpTime).toString();
-				sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_exp_time]", sTemp);
+				Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"),
+						"authsp", "id=" + sTemp);
+				sTemp = _configManager.getParam(authSPsection, "friendly_name");
 			}
-			catch (ASelectStorageException e) {
-				sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_exp_time]", "[unknown]");
-			}
-
-			// In case the SAML20 logout procedure reaches this handler:
-			String sEncTgt = CryptoEngine.getHandle().encryptTGT(Utils.hexStringToByteArray(sTgt));
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_blob]", sEncTgt);
-			// End of SAML20 patch
-
-			sTemp = (String) _htTGTContext.get("app_id");
-			// RH, 20100805, Experimental insert of friendly_name
-			String sFName = _applicationManager.getFriendlyName(sTemp);
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[friendly_name]", sFName);  // backward compatibility
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[requestor_friendly_name]", sFName);  // 20130822, Bauke: added
-			
-			if (sTemp == null)
-				sTemp = "[unknown]";
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[app_id]", sTemp);
-			sUserInfoForm = _configManager.updateTemplate(sUserInfoForm, null/*no session*/, _servletRequest);
-
-			sTemp = (String) _htTGTContext.get("authsp");
-			if (sTemp != null) {
-				try {
-					Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"),
-							"authsp", "id=" + sTemp);
-					sTemp = _configManager.getParam(authSPsection, "friendly_name");
-				}
-				catch (ASelectConfigException eAC) {
-					sTemp = "[unknown]";
-				}
-			}
-			else {
+			catch (ASelectConfigException eAC) {
 				sTemp = "[unknown]";
 			}
+		}
+		else {
+			sTemp = "[unknown]";
+		}
 
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[authsp]", sTemp);
+		sUserInfoForm = Utils.replaceString(sUserInfoForm, "[authsp]", sTemp);
 
-			sTemp = (String) _htTGTContext.get("authsp_level");
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_level]", sTemp);
+		sTemp = (String) _htTGTContext.get("authsp_level");
+		sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_level]", sTemp);
 
-			sTemp = (String) _htTGTContext.get("proxy_organization");
-			if (sTemp == null)
-				sTemp = (String) _htTGTContext.get("organization");
+		sTemp = (String) _htTGTContext.get("proxy_organization");
+		if (sTemp == null)
+			sTemp = (String) _htTGTContext.get("organization");
 
-			String sRemoteAsUrl = null;
-			if (!sTemp.equals(_sMyOrg)) {
-				// 20090113, Bauke: This is only mandatory when we reached "organization" using cross!
-				try {
-					CrossASelectManager oCrossASelectManager = CrossASelectManager.getHandle();
-					String sResourcegroup = oCrossASelectManager.getRemoteParam(sTemp, "resourcegroup");
-					if (sResourcegroup != null) {
-						SAMResource oSAMResource = ASelectSAMAgent.getHandle().getActiveResource(sResourcegroup);
-						Object oRemoteServer = oSAMResource.getAttributes();
-						try {
-							sRemoteAsUrl = _configManager.getParam(oRemoteServer, "url");
-						}
-						catch (ASelectConfigException e) {
-							_systemLogger.log(Level.INFO, _sModule, sMethod, "Remote url not available");
-						}
+		String sRemoteAsUrl = null;
+		if (!sTemp.equals(_sMyOrg)) {
+			// 20090113, Bauke: This is only mandatory when we reached "organization" using cross!
+			try {
+				CrossASelectManager oCrossASelectManager = CrossASelectManager.getHandle();
+				String sResourcegroup = oCrossASelectManager.getRemoteParam(sTemp, "resourcegroup");
+				if (sResourcegroup != null) {
+					SAMResource oSAMResource = ASelectSAMAgent.getHandle().getActiveResource(sResourcegroup);
+					Object oRemoteServer = oSAMResource.getAttributes();
+					try {
+						sRemoteAsUrl = _configManager.getParam(oRemoteServer, "url");
 					}
-					else
-						_systemLogger.log(Level.INFO, _sModule, sMethod, "Remote resourcegroup not available");
+					catch (ASelectConfigException e) {
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "Remote url not available");
+					}
 				}
-				catch (ASelectException ae) {
-					_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM.");
-				}
-				catch (Exception ae) { // Bauke: added
-					_systemLogger.log(Level.INFO, _sModule, sMethod, "Not a 'cross' organization: " + sTemp);
-				}
+				else
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "Remote resourcegroup not available");
 			}
-			if (sRemoteAsUrl == null) {
-				sUserInfoForm = Utils.replaceString(sUserInfoForm, "[org]", sTemp);
+			catch (ASelectException ae) {
+				_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM.");
 			}
-			else {
-				String sTemp3 = "<A HREF=\"" + sRemoteAsUrl + "\">" + sTemp + "</A>";
-				sUserInfoForm = Utils.replaceString(sUserInfoForm, "[org]", sTemp3);
+			catch (Exception ae) { // Bauke: added
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "Not a 'cross' organization: " + sTemp);
 			}
-			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
-			if (_htSessionContext != null) {
-				_htSessionContext.put("user_state", "state_userinfo");
-				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
-			}
-			pwOut.println(sUserInfoForm);
 		}
-		catch (IOException eIO) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error writing output");
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		if (sRemoteAsUrl == null) {
+			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[org]", sTemp);
 		}
+		else {
+			String sTemp3 = "<A HREF=\"" + sRemoteAsUrl + "\">" + sTemp + "</A>";
+			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[org]", sTemp3);
+		}
+		Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
+		if (_htSessionContext != null) {
+			_htSessionContext.put("user_state", "state_userinfo");
+			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
+		}
+		pwOut.println(sUserInfoForm);
 	}
 
 	// Bauke - Verkeersplein functionality added
@@ -3682,7 +3656,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 //		pwOut.append("<html><head><title>"+sStatus+"</title></head><body><h1>"+sStatus+"</h1></body></html>");
 		_systemLogger.log(Level.FINE, MODULE, sMethod, "Sending response="+sResponse);
 		pwOut.append(sResponse);
-		pwOut.close();
 		_systemLogger.log(Level.FINE, MODULE, sMethod, "done");
 	}
 }

@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.logging.Level;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.log.ASelectSystemLogger;
@@ -16,36 +17,39 @@ public abstract class Utils
 {
 	private final static String MODULE = "Utils";
 
-	public static void sendPlainTextResponse(HttpServletResponse response, Message message, ASelectSystemLogger _systemLogger)
+	public static void sendPlainTextResponse(HttpServletRequest request, HttpServletResponse response,
+			Message message, ASelectSystemLogger _systemLogger)
 	{
 		String sMethod = "sendPlainTextResponse";
 
-		response.setContentType("text/plain; charset=utf-8");
 		OutputStream os = null;
 		try {
+			org.aselect.system.utils.Utils.prepareForHttpResponse(request, response, "text/html");  // default text
 			os = response.getOutputStream();
 			os.write(message.keyValueFormEncoding().getBytes());
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not send response message", e);
-		} finally {
+		}
+		finally {
 			try {
 				if (os != null)
 					os.close();
-			} catch (IOException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Could not close outputstream", e);
+			}
+			catch (IOException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not close outputstream", e);
 			}
 		}
 	}
 
-	public static void sendDiscoveryResponse(HttpServletResponse response, String message, ASelectSystemLogger _systemLogger)
+	public static void sendDiscoveryResponse(HttpServletRequest request, HttpServletResponse response,
+			String message, ASelectSystemLogger _systemLogger)
 	throws IOException
 	{
 		String sMethod = "sendDiscoveryResponse";
-		_systemLogger.log(Level.INFO, MODULE, sMethod,
-				"sending XRDS Response: " + message);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "sending XRDS Response: " + message);
 
-		response.setContentType("application/xrds+xml");
+		org.aselect.system.utils.Utils.prepareForHttpResponse(request, response, "application/xrds+xml");
 		OutputStream outputStream = response.getOutputStream();
 		outputStream.write(message.getBytes());
 		outputStream.close();

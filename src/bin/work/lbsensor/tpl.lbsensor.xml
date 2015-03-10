@@ -1,4 +1,5 @@
 <xml>
+<!-- Template for lbsensor.xml -->
 <lbsensor>
     <logging id="system" target='file'>
 	<level>FINER</level>

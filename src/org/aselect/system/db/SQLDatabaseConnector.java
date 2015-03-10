@@ -136,7 +136,7 @@ public class SQLDatabaseConnector
 	public SQLDatabaseConnector(String sDriverName, String sUser, String sPassword, String sURL,
 			SystemLogger systemLogger)
 	throws ASelectDatabaseException {
-		String sMethod = "SQLDatabaseConnector()";
+		String sMethod = "SQLDatabaseConnector";
 		_systemLogger = systemLogger;
 		_sSQLUser = sUser;
 		_sSQLPassword = sPassword;
@@ -210,7 +210,7 @@ public class SQLDatabaseConnector
 	// that do not use "external" parameters, so for now this is safe
 	public synchronized Statement connect()
 	{
-		String sMethod = "connect()";
+		String sMethod = "connect";
 		Statement oStmt = null;
 
 		try {
@@ -262,7 +262,7 @@ public class SQLDatabaseConnector
 	public synchronized boolean disconnect(Statement oStmt)
 	{
 
-		String sMethod = "disconnect()";
+		String sMethod = "disconnect";
 		boolean bRet = false;
 
 		try {
@@ -320,7 +320,7 @@ public class SQLDatabaseConnector
 	public ResultSet executeQuery(Statement oStmt, String sQuery)
 	throws ASelectDatabaseException
 	{
-		String sMethod = "executeQuery()";
+		String sMethod = "executeQuery";
 		ResultSet rs = null;
 
 		try {
@@ -371,7 +371,7 @@ public class SQLDatabaseConnector
 	public int executeUpdate(Statement oStmt, String sQuery)
 	throws ASelectDatabaseException
 	{
-		String sMethod = "executeUpdate()";
+		String sMethod = "executeUpdate";
 		int iRowsChanged = -1;
 
 		try {
@@ -417,7 +417,7 @@ public class SQLDatabaseConnector
 	public void startTransaction(Statement oStmt)
 	throws ASelectDatabaseException
 	{
-		String sMethod = "startTransaction()";
+		String sMethod = "startTransaction";
 		try {
 			if (oStmt == null) {
 				StringBuffer sbError = new StringBuffer("No database connection available, ");
@@ -461,7 +461,7 @@ public class SQLDatabaseConnector
 	public void rollbackTransaction(Statement oStmt)
 	throws ASelectDatabaseException
 	{
-		String sMethod = "rollbackTransaction()";
+		String sMethod = "rollbackTransaction";
 		try {
 			if (oStmt == null) {
 				StringBuffer sbError = new StringBuffer("No database connection available, ");
@@ -504,7 +504,7 @@ public class SQLDatabaseConnector
 	public void commitTransaction(Statement oStmt)
 	throws ASelectDatabaseException
 	{
-		String sMethod = "commitTransaction()";
+		String sMethod = "commitTransaction";
 		try {
 			if (oStmt == null) {
 				StringBuffer sbError = new StringBuffer("No database connection available, ");

@@ -209,8 +209,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void handleCrossAuthenticateResponse(HashMap htServiceRequest, HttpServletResponse servletResponse,
-			PrintWriter pwOut)
+	private void handleCrossAuthenticateResponse(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
 		String sMethod = "handleCrossAuthenticateResponse";

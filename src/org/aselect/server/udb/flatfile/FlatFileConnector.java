@@ -127,7 +127,7 @@ public class FlatFileConnector implements IUDBConnector
 	{
 		String sFlatFile = null;
 		String sUDBResourceGroup = null;
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			_oASelectConfigManager = ASelectConfigManager.getHandle();

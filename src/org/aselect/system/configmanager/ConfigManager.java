@@ -114,7 +114,7 @@ public class ConfigManager implements IConfigManager
 	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			_oSystemLogger = oSystemLogger;
@@ -156,7 +156,7 @@ public class ConfigManager implements IConfigManager
 	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			_oSystemLogger = oSystemLogger;
@@ -279,7 +279,7 @@ public class ConfigManager implements IConfigManager
 	public void importConfig(File fConfig)
 	throws ASelectConfigException
 	{
-		String sMethod = "importConfig()";
+		String sMethod = "importConfig";
 
 		if (fConfig != null) {
 			_oConfigHandler.importConfig(fConfig);
@@ -312,7 +312,7 @@ public class ConfigManager implements IConfigManager
 	 */
 	private IConfigHandler resolveConfigHandler(File fConfig)
 	{
-		String sMethod = "resolveConfigHandler()";
+		String sMethod = "resolveConfigHandler";
 
 		IConfigHandler oConfigHandler = null;
 		int iSepIndex = -1;

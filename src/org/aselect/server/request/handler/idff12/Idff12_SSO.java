@@ -209,7 +209,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 	/* (non-Javadoc)
 	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
-	public RequestState process(HttpServletRequest request, HttpServletResponse response)
+	public RequestState process(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		String sMethod = "process";
@@ -217,13 +217,13 @@ public class Idff12_SSO extends ProtoRequestHandler
 		HashMap htIdffSession = null;
 		String sSerAttributes = null;
 		String sRid = null, sTgt = null;
-		String sUrlRid = request.getParameter("rid");
-		String sPathInfo = request.getPathInfo();
+		String sUrlRid = servletRequest.getParameter("rid");
+		String sPathInfo = servletRequest.getPathInfo();
 		String sServer = null;
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "SSO PATH=" + sPathInfo + " " +
-				request.getMethod() + " " + request.getQueryString());
+				servletRequest.getMethod() + " " + servletRequest.getQueryString());
 
-		HashMap htCredentials = getASelectCredentials(request);
+		HashMap htCredentials = getASelectCredentials(servletRequest);
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "getAselectCredentials: sUrlRid=" + sUrlRid +
 				" Credentials="	+ htCredentials);
 
@@ -244,7 +244,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 						+ ", htAttributes=" + sSerAttributes);
 
 				// Idff session is used to store the Caller's Assertion consumerURL and RelayState
-				_htSessionContext = retrieveSessionDataFromRid(request, SESSION_ID_PREFIX);
+				_htSessionContext = retrieveSessionDataFromRid(servletRequest, SESSION_ID_PREFIX);
 				// _htSessionContext can be null
 				if (_htSessionContext != null)
 					htIdffSession = new HashMap();  // no more additional data needed
@@ -259,16 +259,16 @@ public class Idff12_SSO extends ProtoRequestHandler
 
 		String sRelayState = null, sProviderID = null, sAssertUrl = null;
 		String sRequestID = null;
-		String sReqMethod = request.getMethod();
+		String sReqMethod = servletRequest.getMethod();
 		if (sReqMethod != null && sReqMethod.equals("GET")) {
-			sRelayState = request.getParameter("RelayState");
-			sProviderID = request.getParameter("ProviderID");
+			sRelayState = servletRequest.getParameter("RelayState");
+			sProviderID = servletRequest.getParameter("ProviderID");
 			if (sProviderID == null) // try Oracle glitch
-				sProviderID = request.getParameter("providerid");
-			sRequestID = request.getParameter("RequestID");
+				sProviderID = servletRequest.getParameter("providerid");
+			sRequestID = servletRequest.getParameter("RequestID");
 		}
 		else if (sReqMethod != null && sReqMethod.equals("POST")) {
-			String sLareq = request.getParameter("LAREQ");
+			String sLareq = servletRequest.getParameter("LAREQ");
 			if (sLareq != null) {
 				String sAuthnRequest = new String(Base64Codec.decode(sLareq));
 				if (sAuthnRequest != null) {
@@ -353,11 +353,11 @@ public class Idff12_SSO extends ProtoRequestHandler
 				
 				sRid = (String) htResponse.get("rid");
 				_htSessionContext = (HashMap)htResponse.get("session");  // 20120404, Bauke: the newly created session
-				_htSessionContext = storeSessionDataWithRid(response, htIdffSession, _htSessionContext/*not null*/, SESSION_ID_PREFIX, sRid);
+				_htSessionContext = storeSessionDataWithRid(servletResponse, htIdffSession, _htSessionContext/*not null*/, SESSION_ID_PREFIX, sRid);
 
 				// Let the user make his choice
 				// The cookie contains the previous choice
-				String sSelectedRedirectUrl = HandlerTools.getCookieValue(request, idff12_idp_COOKIE, _systemLogger);
+				String sSelectedRedirectUrl = HandlerTools.getCookieValue(servletRequest, idff12_idp_COOKIE, _systemLogger);
 				if (sSelectedRedirectUrl != null && !_vIdPUrls.contains(sSelectedRedirectUrl)) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid '" + idff12_idp_COOKIE
 							+ "' cookie, unknown IdP: " + sSelectedRedirectUrl);
@@ -367,7 +367,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT_ists=" + sActionUrl + " RelayState="
 						+ sRelayState + " SelectedRedirectUrl=" + sSelectedRedirectUrl);
 				handleShowForm(_sTemplate, sSelectedRedirectUrl, sActionUrl, sRelayState, _sProviderId, null,
-						sASelectURL, sRid, _sASelectServerID, response);
+						sASelectURL, sRid, _sASelectServerID, servletRequest, servletResponse);
 				return new RequestState(null);
 			}
 			// htTgtContext is not null
@@ -382,7 +382,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 			}
 
 			// Store with the newly issued Rid
-			_htSessionContext = storeSessionDataWithRid(response, htIdffSession, _htSessionContext/*can be null*/, SESSION_ID_PREFIX, sRid);
+			_htSessionContext = storeSessionDataWithRid(servletResponse, htIdffSession, _htSessionContext/*can be null*/, SESSION_ID_PREFIX, sRid);
 
 			byte[] bSourceId = Util.generateSourceId(_sProviderId);
 			SAMLArtifactType0003 oSAMLArtifact = new SAMLArtifactType0003(bSourceId);
@@ -398,8 +398,8 @@ public class Idff12_SSO extends ProtoRequestHandler
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sUid=" + sUid);
 
-			String sIP = request.getRemoteAddr();
-			String sHost = request.getRemoteHost();
+			String sIP = servletRequest.getRemoteAddr();
+			String sHost = servletRequest.getRemoteHost();
 			sProviderID = (String) htIdffSession.get("libProviderID");
 			sRequestID = (String) htIdffSession.get("libRequestID");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "createSAMLAssertion, sIP=" + sIP + ", sHost=" + sHost
@@ -429,7 +429,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 			if (sRelayState != null)
 				sAssertUrl += "&RelayState=" + URLEncoder.encode(sRelayState, "UTF-8");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT 2Assert=" + sAssertUrl);
-			response.sendRedirect(sAssertUrl);
+			servletResponse.sendRedirect(sAssertUrl);
 		}
 		catch (ASelectException e) {
 			throw e;

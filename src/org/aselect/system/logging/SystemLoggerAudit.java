@@ -165,7 +165,7 @@ public class SystemLoggerAudit implements ISystemLogger
 			Object oLogTargetConfig, String sWorkingDir)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		int iLogMaxSize = -1;
 		int iLogFiles = -1;

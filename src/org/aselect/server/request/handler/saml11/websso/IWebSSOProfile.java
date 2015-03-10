@@ -17,6 +17,7 @@ package org.aselect.server.request.handler.saml11.websso;
 
 import java.util.HashMap;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.system.exception.ASelectException;
@@ -92,7 +93,7 @@ public interface IWebSSOProfile
 	 * @throws ASelectException
 	 *             if processing fails
 	 */
-	public void process(HashMap htInfo, HttpServletResponse response, String sIP, String sHost)
+	public void process(HashMap htInfo, HttpServletRequest request, HttpServletResponse response, String sIP, String sHost)
 	throws ASelectException;
 
 	/**

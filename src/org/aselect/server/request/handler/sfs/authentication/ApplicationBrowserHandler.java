@@ -248,7 +248,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		if (sRequest == null) {
 			// show info page if nothing to do
 			if (htServiceRequest.containsKey("aselect_credentials_uid"))
-				showUserInfo(htServiceRequest, _servletResponse);
+				showUserInfo(htServiceRequest, _servletResponse, pwOut);
 			else {
 				String sServerInfoForm = _configManager.getHTMLForm("serverinfo", "", "");
 				sServerInfoForm = Utils.replaceString(sServerInfoForm, "[message]", " ");
@@ -1827,105 +1827,94 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void showUserInfo(HashMap htServiceRequest, HttpServletResponse response)
+	private void showUserInfo(HashMap htServiceRequest, HttpServletResponse response, PrintWriter pwOut)
 	throws ASelectException
 	{
 		String sMethod = "showUserInfo";
-		PrintWriter pwOut = null;
 
+		String sUserId = (String) htServiceRequest.get("aselect_credentials_uid");
+		String sMyUrl = (String) htServiceRequest.get("my_url");
+		String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
+
+		String sUserInfoForm = _configManager.getHTMLForm("userinfo", "", "");
+		sUserInfoForm = Utils.replaceString(sUserInfoForm, "[uid]", sUserId);
+		sUserInfoForm = Utils.replaceString(sUserInfoForm, "[a-select-server]", _sMyServerId);
+		sUserInfoForm = Utils.replaceString(sUserInfoForm, "[aselect_url]", sMyUrl);
+
+		String sTemp;
+		HashMap htTGTContext = _tgtManager.getTGT(sTgt);
 		try {
-			// get output writer
-			pwOut = response.getWriter();
+			long lExpTime = _tgtManager.getExpirationTime(sTgt);
+			sTemp = new Date(lExpTime).toString();
+			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_exp_time]", sTemp);
+		}
+		catch (ASelectStorageException e) {
+			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_exp_time]", "[unknown]");
+		}
 
-			String sUserId = (String) htServiceRequest.get("aselect_credentials_uid");
-			String sMyUrl = (String) htServiceRequest.get("my_url");
-			String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
+		sTemp = (String) htTGTContext.get("app_id");
+		if (sTemp == null)
+			sTemp = "[unknown]";
+		sUserInfoForm = Utils.replaceString(sUserInfoForm, "[app_id]", sTemp);
 
-			String sUserInfoForm = _configManager.getHTMLForm("userinfo", "", "");
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[uid]", sUserId);
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[a-select-server]", _sMyServerId);
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[aselect_url]", sMyUrl);
+		sUserInfoForm = _configManager.updateTemplate(sUserInfoForm, htTGTContext, _servletRequest);
 
-			String sTemp;
-			HashMap htTGTContext = _tgtManager.getTGT(sTgt);
+		sTemp = (String) htTGTContext.get("authsp");
+		if (sTemp != null) {
 			try {
-				long lExpTime = _tgtManager.getExpirationTime(sTgt);
-				sTemp = new Date(lExpTime).toString();
-				sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_exp_time]", sTemp);
+				Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"),
+						"authsp", "id=" + sTemp);
+				sTemp = _configManager.getParam(authSPsection, "friendly_name");
 			}
-			catch (ASelectStorageException e) {
-				sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_exp_time]", "[unknown]");
-			}
-
-			sTemp = (String) htTGTContext.get("app_id");
-			if (sTemp == null)
-				sTemp = "[unknown]";
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[app_id]", sTemp);
-
-			sUserInfoForm = _configManager.updateTemplate(sUserInfoForm, htTGTContext, _servletRequest);
-
-			sTemp = (String) htTGTContext.get("authsp");
-			if (sTemp != null) {
-				try {
-					Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"),
-							"authsp", "id=" + sTemp);
-					sTemp = _configManager.getParam(authSPsection, "friendly_name");
-				}
-				catch (ASelectConfigException eAC) {
-					sTemp = "[unknown]";
-				}
-			}
-			else {
+			catch (ASelectConfigException eAC) {
 				sTemp = "[unknown]";
 			}
+		}
+		else {
+			sTemp = "[unknown]";
+		}
 
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[authsp]", sTemp);
+		sUserInfoForm = Utils.replaceString(sUserInfoForm, "[authsp]", sTemp);
 
-			sTemp = (String) htTGTContext.get("authsp_level");
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_level]", sTemp);
+		sTemp = (String) htTGTContext.get("authsp_level");
+		sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_level]", sTemp);
 
-			sTemp = (String) htTGTContext.get("proxy_organization");
-			if (sTemp == null)
-				sTemp = (String) htTGTContext.get("organization");
+		sTemp = (String) htTGTContext.get("proxy_organization");
+		if (sTemp == null)
+			sTemp = (String) htTGTContext.get("organization");
 
-			String sRemoteAsUrl = null;
-			if (!sTemp.equals(_sMyOrg)) {
-				try {
-					CrossASelectManager oCrossASelectManager = CrossASelectManager.getHandle();
-					String sResourcegroup = oCrossASelectManager.getRemoteParam(sTemp, "resourcegroup");
-					if (sResourcegroup == null) {
-						String sRelay = ASelectBrowserHandler.getSFSRelay(sTemp);
-						if (sRelay != null) {
-							sResourcegroup = _crossASelectManager.getRemoteParam(sRelay, "resourcegroup");
-							sTemp = sRelay;
-						}
-						else {
-							_systemLogger.log(Level.SEVERE, _sModule, sMethod,
-									"No remote server and no relay found for: " + sTemp);
-						}
+		String sRemoteAsUrl = null;
+		if (!sTemp.equals(_sMyOrg)) {
+			try {
+				CrossASelectManager oCrossASelectManager = CrossASelectManager.getHandle();
+				String sResourcegroup = oCrossASelectManager.getRemoteParam(sTemp, "resourcegroup");
+				if (sResourcegroup == null) {
+					String sRelay = ASelectBrowserHandler.getSFSRelay(sTemp);
+					if (sRelay != null) {
+						sResourcegroup = _crossASelectManager.getRemoteParam(sRelay, "resourcegroup");
+						sTemp = sRelay;
 					}
-					SAMResource oSAMResource = ASelectSAMAgent.getHandle().getActiveResource(sResourcegroup);
-					Object oRemoteServer = oSAMResource.getAttributes();
-					sRemoteAsUrl = _configManager.getParam(oRemoteServer, "url");
+					else {
+						_systemLogger.log(Level.SEVERE, _sModule, sMethod,
+								"No remote server and no relay found for: " + sTemp);
+					}
 				}
-				catch (ASelectException ae) {
-					_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM.", ae);
-					sRemoteAsUrl = null;
-				}
+				SAMResource oSAMResource = ASelectSAMAgent.getHandle().getActiveResource(sResourcegroup);
+				Object oRemoteServer = oSAMResource.getAttributes();
+				sRemoteAsUrl = _configManager.getParam(oRemoteServer, "url");
 			}
-			if (sRemoteAsUrl == null) {
-				sUserInfoForm = Utils.replaceString(sUserInfoForm, "[org]", sTemp);
+			catch (ASelectException ae) {
+				_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM.", ae);
+				sRemoteAsUrl = null;
 			}
-			else {
-				String sTemp3 = "<A HREF=\"" + sRemoteAsUrl + "\">" + sTemp + "</A>";
-				sUserInfoForm = Utils.replaceString(sUserInfoForm, "[org]", sTemp3);
-			}
-			pwOut.println(sUserInfoForm);
 		}
-		catch (IOException eIO) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error writing output", eIO);
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		if (sRemoteAsUrl == null) {
+			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[org]", sTemp);
 		}
+		else {
+			String sTemp3 = "<A HREF=\"" + sRemoteAsUrl + "\">" + sTemp + "</A>";
+			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[org]", sTemp3);
+		}
+		pwOut.println(sUserInfoForm);
 	}
-
 }

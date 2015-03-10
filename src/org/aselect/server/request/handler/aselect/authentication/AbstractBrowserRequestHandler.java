@@ -230,11 +230,11 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		PrintWriter pwOut = null;
 		HashMap htServiceRequest = null;
 		boolean bSuccess = false;
+		
 		try {
 			_timerSensor.timerSensorStart(-1/*level unused*/, 3/*type=server*/, _lMyThreadId);  // unused by default
 
-			pwOut = _servletResponse.getWriter();
-			_servletResponse.setContentType("text/html; charset=utf-8");
+			pwOut = Utils.prepareForHtmlOutput(_servletRequest, _servletResponse);
 			
 			// Also reads TGT into _htTGTContext if available
 			htServiceRequest = createServiceRequest(_servletRequest);
@@ -285,6 +285,8 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		finally {
+			if (pwOut != null)
+				pwOut.close();
 			try {
 				if (_timerSensor.getTimerSensorLevel() >= 1) {  // used
 					_timerSensor.timerSensorFinish(bSuccess);
@@ -356,6 +358,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			sErrorForm = _configManager.updateTemplate(sErrorForm, _htSessionContext, _servletRequest);  // accepts a null Session!
 			//_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM="+sErrorForm);
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
+			
 			pwOut.println(sErrorForm);
 		}
 		catch (Exception e) {

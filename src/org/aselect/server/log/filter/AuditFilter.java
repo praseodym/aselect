@@ -134,7 +134,7 @@ public class AuditFilter implements Filter
 	public void init(FilterConfig filterConfig)
 	throws ServletException
 	{
-		final String sMethod = "init()";
+		final String sMethod = "init";
 		_logger = ASelectSystemLogger.getHandle();
 		// this.filterConfig = filterConfig;
 		filterConfig.getFilterName(); // We probably want this later

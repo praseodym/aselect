@@ -162,7 +162,7 @@ public class SAMResourceGroup extends Thread
 	throws ASelectSAMException
 	{
 		StringBuffer sbError = new StringBuffer(MODULE + " ");
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		_htResources = new HashMap();
 		_vActive = new Vector();
@@ -290,7 +290,7 @@ public class SAMResourceGroup extends Thread
 	throws ASelectSAMException
 	{
 		StringBuffer sbError = new StringBuffer(MODULE);
-		String sMethod = "getActiveResource()";
+		String sMethod = "getActiveResource";
 
 		if (_vActive.isEmpty()) {
 			sbError.append("There were no resources found to be active for resourcegroup id:" + getsResourceGroupID());
@@ -332,7 +332,7 @@ public class SAMResourceGroup extends Thread
 	throws ASelectSAMException
 	{
 		StringBuffer sbError = new StringBuffer(MODULE);
-		String sMethod = "getResource()";
+		String sMethod = "getResource";
 
 		SAMResource oSAMResource = null;
 
@@ -429,16 +429,16 @@ public class SAMResourceGroup extends Thread
 						index++;
 					} else break;
 				}
-				_oSystemLogger.log(Level.FINEST, MODULE, "updateStatus()", "Inserting resource " +oSAMResource.getId() + "  into vLive at position: " + index);
+				_oSystemLogger.log(Level.FINEST, MODULE, "updateStatus", "Inserting resource " +oSAMResource.getId() + "  into vLive at position: " + index);
 				vLive.add(index, oSAMResource);
 				// RH, 20110202, en
 //				vLive.add(oSAMResource);			// RH, 20110202, o
-				_oSystemLogger.log(Level.FINEST, MODULE, "updateStatus()", "Size of vLive is now: " + vLive.size());
+				_oSystemLogger.log(Level.FINEST, MODULE, "updateStatus", "Size of vLive is now: " + vLive.size());
 			}
 		}
 		// RH, 20120628, sn
 		if ( vLive.size() == 0 ) {
-			String sMethod = "updateStatus()";
+			String sMethod = "updateStatus";
 			StringBuffer sbError = new StringBuffer("No active resources for resourcegroup:" + getsResourceGroupID() );
 			_oSystemLogger.log(getCriticalResourceGroupNoticeLevel(), MODULE, sMethod, sbError.toString());
 		}

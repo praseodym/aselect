@@ -290,7 +290,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 */
 	@SuppressWarnings("unchecked")
 	protected void handleSpecificSaml20Request(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-			SignableSAMLObject samlMessage, String sRelayState)
+			PrintWriter pwOut, SignableSAMLObject samlMessage, String sRelayState)
 	throws ASelectException
 	{
 		String sMethod = "handleSpecificSaml20Request " + Thread.currentThread().getId();
@@ -304,7 +304,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			Response errorResponse = validateAuthnRequest(authnRequest, httpRequest.getRequestURL().toString());
 			if (errorResponse != null) {
 				_systemLogger.log(Audit.SEVERE, MODULE, sMethod, "validateAuthnRequest failed");
-				sendErrorArtifact(errorResponse, authnRequest, httpResponse, sRelayState);
+				sendErrorArtifact(errorResponse, authnRequest, httpRequest, httpResponse, pwOut, sRelayState);
 				return;
 			}
 			// The message is OK
@@ -399,7 +399,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				errorResponse = errorResponse(sSPRid, sAssertionConsumerServiceURL, StatusCode.NO_AUTHN_CONTEXT_URI,
 						sStatusMessage);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sStatusMessage);
-				sendErrorArtifact(errorResponse, authnRequest, httpResponse, sRelayState);
+				sendErrorArtifact(errorResponse, authnRequest, httpRequest, httpResponse, pwOut, sRelayState);
 				return;
 			}
 
@@ -591,8 +591,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void sendErrorArtifact(Response errorResponse, AuthnRequest authnRequest, HttpServletResponse httpResponse,
-			String sRelayState)
+	private void sendErrorArtifact(Response errorResponse, AuthnRequest authnRequest,
+			HttpServletRequest httpRequest, HttpServletResponse httpResponse, PrintWriter pwOut, String sRelayState)
 	throws IOException, ASelectException
 	{
 		String sMethod = "sendErrorArtifact";
@@ -607,13 +607,12 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		// So in this case send a message to the browser
 		String sAssertionConsumerServiceURL = getAssertionConsumerServiceURL(authnRequest, null);
 		if (sAssertionConsumerServiceURL != null) {
-			artifactManager.sendArtifact(sArtifact, errorResponse, sAssertionConsumerServiceURL, httpResponse,
-					sRelayState, null);
+			artifactManager.sendArtifact(sArtifact, errorResponse, sAssertionConsumerServiceURL,
+					httpRequest, httpResponse, sRelayState, null);
 		}
 		else {
 			String errorMessage = "Something wrong in SAML communication";
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, errorMessage);
-			PrintWriter pwOut = httpResponse.getWriter();
 			pwOut.write(errorMessage);
 		}
 	}
@@ -693,14 +692,14 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			// 20120719, Bauke added test for post_template!
 			if (Saml20_Metadata.singleSignOnServiceBindingConstantPOST.equals(sReqBInding) && getPostTemplate() != null) {
 				_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with post to: " + sAssertUrl);
-				sendSAMLResponsePOST(sAssertUrl, sRid, _htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
+				sendSAMLResponsePOST(sAssertUrl, sRid, _htSessionContext, sTgt, htTGTContext, httpRequest, httpResponse, sRelayState);
 			}
 			else {	// use artifact as default (for backward compatibility) 
 				if (Saml20_Metadata.singleSignOnServiceBindingConstantPOST.equals(sReqBInding)) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Requested POST binding but post_template missing, doing redirect" );
 				}
 				_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with artifact to: " + sAssertUrl);
-				sendSAMLArtifactRedirect(sAssertUrl, sRid, _htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
+				sendSAMLArtifactRedirect(sAssertUrl, sRid, _htSessionContext, sTgt, htTGTContext, httpRequest, httpResponse, sRelayState);
 			}
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Return from AuthSP handled");
 
@@ -741,7 +740,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 *            the s tgt
 	 * @param htTGTContext
 	 *            the ht tgt context
-	 * @param oHttpServletResponse
+	 * @param servletResponse
 	 *            the o http servlet response
 	 * @param sRelayState
 	 *            the s relay state
@@ -750,7 +749,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 */
 	@SuppressWarnings("unchecked")
 	private void sendSAMLArtifactRedirect(String sAppUrl, String sRid, HashMap htSessionContext, String sTgt,
-			HashMap htTGTContext, HttpServletResponse oHttpServletResponse, String sRelayState)
+			HashMap htTGTContext, HttpServletRequest servletRequest, HttpServletResponse servletResponse, String sRelayState)
 	throws ASelectException
 	{
 		String sMethod = "sendSAMLArtifactRedirect";
@@ -762,7 +761,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		String sArtifact = artifactManager.buildArtifact(response, _sASelectServerUrl, sRid);
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sendArtifact " + sArtifact);
-			artifactManager.sendArtifact(sArtifact, response, sAppUrl, oHttpServletResponse, sRelayState, _sAddedPatching);
+			artifactManager.sendArtifact(sArtifact, response, sAppUrl, servletRequest, servletResponse, sRelayState, _sAddedPatching);
 		}
 		catch (IOException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Redirect to : '" + sAppUrl + "' failed", e);
@@ -784,7 +783,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 *            the TGT
 	 * @param htTGTContext
 	 *            the tgt context
-	 * @param oHttpServletResponse
+	 * @param servletResponse
 	 *            the http servlet response
 	 * @param sRelayState
 	 *            the relay state
@@ -792,7 +791,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 */
 	@SuppressWarnings("unchecked")
 	private void sendSAMLResponsePOST(String sAppUrl, String sRid, HashMap htSessionContext, String sTgt,
-			HashMap htTGTContext, HttpServletResponse oHttpServletResponse, String sRelayState)
+			HashMap htTGTContext, HttpServletRequest servletRequest, HttpServletResponse servletResponse, String sRelayState)
 	throws ASelectException
 	{
 		String sMethod = "sendSAMLResponsePOST";
@@ -870,7 +869,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		if (getPostTemplate() != null) {
 			String sSelectForm = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null/*subdir*/,
 					getPostTemplate(), _sUserLanguage, _configManager.getOrgFriendlyName(), Version.getVersion());
-			handlePostForm(sSelectForm, sp_assert_url, sInputs, oHttpServletResponse);
+			handlePostForm(sSelectForm, sp_assert_url, sInputs, servletRequest, servletResponse);
 		}
 		else {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No POST template found");

@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.config.ASelectConfigManager;
@@ -33,7 +34,6 @@ import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.Utils;
 import org.opensaml.SAMLAssertion;
 import org.opensaml.SAMLAttribute;
 import org.opensaml.SAMLAttributeStatement;
@@ -169,7 +169,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 	 * @see org.aselect.server.request.handler.saml11.websso.IWebSSOProfile#process(java.util.HashMap,
 	 *      javax.servlet.http.HttpServletResponse, java.lang.String, java.lang.String)
 	 */
-	abstract public void process(HashMap htInfo, HttpServletResponse response, String sIP, String sHost)
+	abstract public void process(HashMap htInfo, HttpServletRequest request, HttpServletResponse response, String sIP, String sHost)
 	throws ASelectException;
 
 	/**

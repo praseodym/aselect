@@ -235,12 +235,8 @@ public class LDAPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit good
 		String failureHandling = _sFailureHandling;	// Initially we use default from config, this might change if we suspect parameter tampering
 
 		try {
-			// 20141208, Bauke: utf-8 added
-			servletResponse.setContentType("text/html; charset=utf-8");	// RH, 20111021, n 	// contenttype must be set before getwriter
-
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
-			pwOut = servletResponse.getWriter();
-
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+			
 			String sQueryString = servletRequest.getQueryString();  // parameters are URL encoded
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, true/*url decode*/);
 			// In htServiceRequest values are URL decoded now
@@ -358,9 +354,7 @@ public class LDAPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit good
 		String sRequest = servletRequest.getParameter("request");
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "LDAP POST { req="+sRequest+" query-->" + servletRequest.getQueryString()+" len="+servletRequest.getContentLength());
 		try {
-			// 20141208, Bauke: utf-8 added
-			servletResponse.setContentType("text/html; charset=utf-8");	// RH, 20111021, n	// contenttype must be set before getwriter
-			pwOut = servletResponse.getWriter();
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 			// NOTE: getParameter() returns an URL decoded value
 			sLanguage = servletRequest.getParameter("language");  // optional language code
@@ -394,7 +388,6 @@ public class LDAPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit good
 				handleApiRequest(htServiceRequest, servletRequest, pwOut, servletResponse);
 				return;
 			}
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "sRequest="+sRequest+" sRid="+sRid+" sUid="+sUid+" sPassword="+sPassword);
 			if (sRid == null || sAsUrl == null || sUid == null || sPassword == null || sAsId == null ||
@@ -696,6 +689,7 @@ public class LDAPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit good
 		}
 		
 		// set reponse headers
+		// Overwrite prepareForHtmlOutput() settings
 		servletResponse.setContentType("application/x-www-form-urlencoded");  // must be set before getWriter()
 		servletResponse.setContentLength(sbResponse.length());
 		pwOut.write(sbResponse.toString());

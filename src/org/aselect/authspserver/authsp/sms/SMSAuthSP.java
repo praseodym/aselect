@@ -287,10 +287,7 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 			if (sCountry == null || sCountry.trim().length() < 1)
 				sCountry = null;
 			
-			// 20141208, Bauke: utf-8 added
-			servletResponse.setContentType("text/html; charset=utf-8");	// RH, 20111021, n			// Content type must be set (before getwriter)
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
-			pwOut = servletResponse.getWriter();
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 			// check if the request is an API call
 			String sRequestName = (String) htServiceRequest.get("request");
@@ -344,9 +341,10 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 				sRetryCounter +=  ":" + formtoken;	// for backward compatibility  we use the retry_counter to store our formtoken
 				HashMap sessionContext = null; 
 				
-				if ( !_sessionManager.containsKey(sRid) ) {	// We expect there is no session yet
+				if (!_sessionManager.containsKey(sRid)) {	// We expect there is no session yet
 					sessionContext = new HashMap();
-				} else  {
+				}
+				else {
 					sessionContext = _sessionManager.getSessionContext(sRid);
 				}
 				sessionContext.put("sms_formtoken", formtoken);
@@ -471,10 +469,7 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 			if (sCountry == null || sCountry.trim().length() < 1)
 				sCountry = null;
 			
-			// 20141208, Bauke: utf-8 added
-			servletResponse.setContentType("text/html; charset=utf-8");
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
-			pwOut = servletResponse.getWriter();
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 			String sMyUrl = servletRequest.getRequestURL().toString();
 			String sRid = servletRequest.getParameter("rid");
@@ -559,25 +554,7 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 
 				if (sResultCode.equals(Errors.ERROR_SMS_INVALID_PASSWORD)) // invalid password
 				{
-//					// RH, 20110104, sn
-//					// verify form signature
-//					// formSignature is stored as part of the retryCounter
-//					String[] sa = sRetryCounter.split(":");
-//					String formSignature = sa[1];
-//					sRetryCounter = sa[0];
-//					String signedParms = sConcat(sAsId, sUid, sRetryCounter);
-//					if ( !_cryptoEngine.verifyMySignature(signedParms, formSignature) ) {
-//						StringBuffer sbWarning = new StringBuffer("Invalid signature from User form '");
-//						sbWarning.append(sAsId).append("' for user: ").append(sUid);
-//						sbWarning.append(" , handling error locally. ").append(sUid);	// RH, 20111021, n
-//						_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
-//						failureHandling = "local";	// RH, 20111021, n
-//						throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);
-//					}
-//					// RH, 20110104, en
-
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Invalid password, retry=" + retry_counter + " < " + _iAllowedRetries);
-//					int iRetriesDone = Integer.parseInt(sRetryCounter);
 					int iRetriesDone = retry_counter;
 					if (iRetriesDone < _iAllowedRetries) // try again
 					{
@@ -587,7 +564,7 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 						htServiceRequest.put("uid", sUid);
 						htServiceRequest.put("rid", sRid);
 						htServiceRequest.put("a-select-server", sAserverId);
-						// RH, 20110104, sn
+
 						// add formsignature
 						sRetryCounter =  String.valueOf(iRetriesDone + 1);
 						sessionContext.put("sms_retry_counter", iRetriesDone+1);
@@ -595,12 +572,9 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 						sessionContext.put("sms_formtoken", formtoken);
 						_sessionManager.updateSession(sRid, sessionContext);
 
-//						sRetryCounter =  String.valueOf(formtoken);
 						sRetryCounter +=  ":" + formtoken;	// for backward compatibility we use sRetryCounter to store the formtoken
 						
 						sRetryCounter += ":" + _cryptoEngine.generateSignature( sConcat(sAserverId, sUid, sRetryCounter));
-						// RH, 20110104, en
-//						htServiceRequest.put("retry_counter", String.valueOf(iRetriesDone + 1));	// RH, 20110104, o
 						htServiceRequest.put("retry_counter", sRetryCounter);	// RH, 20110104, n
 						htServiceRequest.put("signature", sSignature);
 						if (sCountry != null)

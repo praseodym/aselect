@@ -82,7 +82,7 @@ public interface IMessageCreatorInterface extends IInputMessage, IOutputMessage
 	 * @throws ASelectCommunicationException
 	 *             if communication fails.
 	 */
-	public boolean init(IProtocolRequest oRequest, IProtocolResponse oResponse)
+	public boolean soapInit(IProtocolRequest oRequest, IProtocolResponse oResponse)
 	throws ASelectCommunicationException;
 
 }

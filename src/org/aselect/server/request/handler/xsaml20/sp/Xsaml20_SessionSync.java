@@ -12,6 +12,7 @@
 package org.aselect.server.request.handler.xsaml20.sp;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -113,16 +114,16 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	/**
 	 * Process incoming session synchronization message. <br>
 	 * 
-	 * @param request
+	 * @param servletRequest
 	 *            The HttpServletRequest.
-	 * @param response
+	 * @param servletResponse
 	 *            The HttpServletResponse.
 	 * @return the request state
 	 * @throws ASelectException
 	 *             If processing of request fails.synchronizeSession
 	 */
 	// RM_58_01
-	public RequestState process(HttpServletRequest request, HttpServletResponse response)
+	public RequestState process(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		String errorCode = Errors.ERROR_ASELECT_SUCCESS;
@@ -132,7 +133,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 				+ _sMessageType);
 
 		// get credentials from url
-		String sEncryptedTgt = request.getParameter("credentials");
+		String sEncryptedTgt = servletRequest.getParameter("credentials");
 
 		// Do we need to send an update to the federation?
 		if (sEncryptedTgt != null) {
@@ -186,7 +187,9 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 		}
 
 		try {
-			response.getWriter().write("result_code=" + errorCode);
+			PrintWriter pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+			pwOut.write("result_code=" + errorCode);
+			pwOut.close();
 		}
 		catch (IOException e) {
 			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "Failed to write response", e);

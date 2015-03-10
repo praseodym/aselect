@@ -261,7 +261,7 @@ public class ASelectAgent
 	 */
 	public static void main(String[] saArgs)
 	{
-		String sMethod = "main()";
+		String sMethod = "main";
 		ASelectAgentSystemLogger oASelectAgentSystemLogger = ASelectAgentSystemLogger.getHandle();
 		ASelectAgent oASelectAgent = null;
        
@@ -536,7 +536,7 @@ public class ASelectAgent
 	public void startServices()
 	throws Exception
 	{
-		String sMethod = "startServices()";
+		String sMethod = "startServices";
 		// try to allocate the listening ports on localhost.
 		_oServiceSocket = new ServerSocket(this._servicePort, 50, InetAddress.getByName("localhost"));
 		_oAdminSocket = new ServerSocket(this._adminPort, 50, InetAddress.getByName("localhost"));
@@ -652,7 +652,7 @@ public class ASelectAgent
 	 */
 	private IClientCommunicator getCommunicator()
 	{
-		String sMethod = "getCommunicator()";
+		String sMethod = "getCommunicator";
 		IClientCommunicator oCommunicator = null;
 
 		ASelectAgentConfigManager oASelectAgentConfigManager = ASelectAgentConfigManager.getHandle();
@@ -718,7 +718,7 @@ public class ASelectAgent
 		{
 			Socket oSocket = null;
 			RequestHandler oHandler;
-			String sMethod = "APIServiceHandler.run()";
+			String sMethod = "APIServiceHandler.run";
 
 			StringBuffer sbInfo = new StringBuffer("APIServiceHandler started on port: ");
 			sbInfo.append(_servicePort);
@@ -773,7 +773,7 @@ public class ASelectAgent
 		public void run()
 		{
 			Socket oSocket;
-			String sMethod = "AdminServiceHandler.run()";
+			String sMethod = "AdminServiceHandler.run";
 
 			StringBuffer sbInfo = new StringBuffer("AdminServiceHandler started on port: ");
 			sbInfo.append(_adminPort);

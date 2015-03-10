@@ -303,6 +303,8 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 		// super doGet for basics, future improvement
 //		super.doGet(servletRequest, servletResponse);
 		try {
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+
 			String sQueryString = servletRequest.getQueryString();
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "GET htServiceRequest=" + htServiceRequest);
@@ -313,10 +315,6 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 			if (sCountry == null || sCountry.trim().length() < 1)
 				sCountry = null;
 			
-			servletResponse.setContentType("text/html; charset=utf-8");	// RH, 20111021, n			// Content type must be set (before getwriter)
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
-			pwOut = servletResponse.getWriter();
-
 			// check if the request is an API call
 			String sRequestName = (String) htServiceRequest.get("request");
 			if (sRequestName != null) // API request
@@ -463,9 +461,7 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 			if (sCountry == null || sCountry.trim().length() < 1)
 				sCountry = null;
 			
-			servletResponse.setContentType("text/html; charset=utf-8");
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
-			pwOut = servletResponse.getWriter();
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 			String sMyUrl = servletRequest.getRequestURL().toString();
 			String sRid = servletRequest.getParameter("rid");

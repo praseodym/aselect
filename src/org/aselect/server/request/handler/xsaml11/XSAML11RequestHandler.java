@@ -213,7 +213,7 @@ public class XSAML11RequestHandler extends ProtoRequestHandler
 
 			// Send the response (=redirect)
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "TARGET=" + sTarget);
-			send(response, oSAMLArtifact, _sDestinationLocation, sTarget);
+			sendArtifact(response, oSAMLArtifact, _sDestinationLocation, sTarget);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -239,7 +239,7 @@ public class XSAML11RequestHandler extends ProtoRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void send(HttpServletResponse response, SAMLArtifact oSAMLArtifact, String sRedirectUrl, String sTarget)
+	private void sendArtifact(HttpServletResponse response, SAMLArtifact oSAMLArtifact, String sRedirectUrl, String sTarget)
 	throws ASelectException
 	{
 		String sMethod = "send";

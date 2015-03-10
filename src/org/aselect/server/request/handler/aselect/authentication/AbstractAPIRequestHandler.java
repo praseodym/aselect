@@ -210,7 +210,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 		// create the communicator with the message creator
 		Communicator communicator = new Communicator(_messageCreator);
 		try {
-			if (communicator.init(protocolRequest, protocolResponse)) {
+			if (communicator.comInit(protocolRequest, protocolResponse)) {
 				IInputMessage inputMessage = communicator.getInputMessage();
 				IOutputMessage outputMessage = communicator.getOutputMessage();
 				
@@ -277,7 +277,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 					}
 				}
 
-				communicator.send();
+				communicator.comSend();
 			}
 			else { // could not init, error was sent in communicator.
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Can't initialize Message Creator object: "

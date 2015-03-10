@@ -161,7 +161,7 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 			intMaxSessions = Integer.valueOf(sMaxSessions);
 		}
 		catch (ASelectConfigException e) {
-			ASelectSystemLogger.getHandle().log(Level.SEVERE, MODULE, "SessionMonitorModel()",
+			ASelectSystemLogger.getHandle().log(Level.SEVERE, MODULE, "SessionMonitorModel",
 					"No valid 'max' config item in storage handler with id='session'", e);
 			intMaxSessions = Integer.valueOf("100");
 		}
@@ -366,7 +366,7 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 			catch (Exception e) {
 			}
 		}
-		ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "run()", "SessionMonitorModel stopped");
+		ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "run", "SessionMonitorModel stopped");
 	}
 
 	/**
@@ -400,7 +400,7 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 			}
 		}
 		catch (Exception e) {
-			ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE, "getServerStatus()",
+			ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE, "getServerStatus",
 					"No session contexts available");
 		}
 	}

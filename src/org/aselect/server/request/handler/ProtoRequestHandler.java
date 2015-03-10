@@ -547,14 +547,14 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *            the s rid
 	 * @param sAselectServer
 	 *            the s aselect server
-	 * @param response
+	 * @param servletResponse
 	 *            the response
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
 	protected void handleShowForm(String sTemplate, String sSelectedIdP, String sAction, String sPassContext,
 			String sReplyTo, String sCurrentTime, String sAselectUrl, String sRid, String sAselectServer,
-			HttpServletResponse response)
+			HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		String sMethod = "handleShowForm";
@@ -563,8 +563,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 				+ " ReplyTo=" + sReplyTo + " AselectUrl=" + sAselectUrl + " Rid=" + sRid + " Server=" + sAselectServer);
 
 		try {
-			response.setContentType("text/html; charset=utf-8");
-			pwOut = response.getWriter();
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 			StringBuffer sbSelection = new StringBuffer();
 			for (int i = 0; _vIdPUrls != null && i < _vIdPUrls.size(); i++) {
@@ -617,11 +616,12 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *            the action
 	 * @param sInputLines
 	 *            the input lines
-	 * @param response
+	 * @param servletResponse
 	 *            the response
 	 * @throws ASelectException
 	 */
-	protected void handlePostForm(String sTemplate, String sAction, String sInputLines, HttpServletResponse response)
+	protected void handlePostForm(String sTemplate, String sAction, String sInputLines,
+			HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		String sMethod = "handlePostForm";
@@ -633,10 +633,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			sTemplate = Utils.replaceString(sTemplate, "[input_area]", sInputLines);
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sTemplate=" + Utils.firstPartOf(sTemplate, 160));
 
-			response.setContentType("text/html; charset=utf-8");
-			response.setHeader("Pragma", "no-cache");
-			response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-			pwOut = response.getWriter();
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 			pwOut.print(sTemplate);
 		}
 		catch (Exception e) {

@@ -114,7 +114,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 	 */
 	@Override
 	protected void handleSpecificSaml20Request(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-						SignableSAMLObject samlMessage, String sRelayState)
+						PrintWriter pwOut, SignableSAMLObject samlMessage, String sRelayState)
 	throws ASelectException
 	{
 		String sMethod = "handleSpecificSaml20Request";
@@ -126,7 +126,6 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "received SAMLRequest: \n"
 					+ XMLHelper.prettyPrintXML(logoutRequest.getDOM()));
 
-			PrintWriter pwOut = httpResponse.getWriter();
 			Response errorResponse = validateLogoutRequest(logoutRequest, httpRequest);
 			if (errorResponse != null) {
 				String errorMessage = "Something wrong in SAML communication";
@@ -253,10 +252,8 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "display form");
 
 		sLogout_infoForm = _configManager.updateTemplate(sLogout_infoForm, _htSessionContext, httpRequest);  // 20130822, Bauke: added to show requestor_friendly_name
-		httpResponse.setContentType("text/html; charset=utf-8");
 		Tools.pauseSensorData(_configManager, _systemLogger, null);  //20111102, there's no session available at this point (will be logged)
 		pwOut.println(sLogout_infoForm);
-		pwOut.close();
 	}
 
 	/**

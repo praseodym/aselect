@@ -18,6 +18,7 @@ import javax.servlet.http.*;
 import org.aselect.system.logging.ISystemLogger;
 import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.Tools;
+import org.aselect.system.utils.Utils;
 
 public class HtmlInfo extends HttpServlet
 {
@@ -65,9 +66,9 @@ public class HtmlInfo extends HttpServlet
 	/**
 	 * Do get.
 	 * 
-	 * @param request
+	 * @param servletRequest
 	 *            the request
-	 * @param response
+	 * @param servletResponse
 	 *            the response
 	 * @param systemLogger
 	 *            the system logger
@@ -78,48 +79,44 @@ public class HtmlInfo extends HttpServlet
 	 */
 	// RH, 20100621, Remove cyclic dependency system<->server
 //	public void doGet(HttpServletRequest request, HttpServletResponse response, ASelectSystemLogger systemLogger)
-	public void doGet(HttpServletRequest request, HttpServletResponse response, ISystemLogger systemLogger)
+	public void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse, ISystemLogger systemLogger)
 	throws ServletException, IOException
 	{
 		String sMethod = "handleHtmlInfo";
 		int idx;
 		String base64coded, decoded = null, username = null, password = null;
-		String AuthHeader = request.getHeader("Authorization");
+		String AuthHeader = servletRequest.getHeader("Authorization");
 		BASE64Decoder decoder = new BASE64Decoder();
 
 		systemLogger.log(Level.INFO, _sModule, sMethod, "htmlInfo { " + getMyID() + ", "
 				+ Thread.currentThread().getName());
 
-		String path = request.getPathInfo();
-		String url = request.getRequestURI();
+		String path = servletRequest.getPathInfo();
+		String url = servletRequest.getRequestURI();
 		systemLogger.log(Level.INFO, _sModule, sMethod, "path=" + path + ", uri=" + url);
 
-		response.setHeader("Pragma", "no-cache");
-		response.setContentType("text/html; charset=utf-8");
-
-		PrintWriter htmlpage;
-		htmlpage = response.getWriter();
+		PrintWriter htmlpage = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 		htmlpage.println("<html>");
 		htmlpage.println("<body>");
 
 		htmlpage.println("<b>Query string</b><br>");
 		htmlpage.println("<pre>");
-		htmlpage.println(Tools.htmlEncode(request.getQueryString()));
+		htmlpage.println(Tools.htmlEncode(servletRequest.getQueryString()));
 		htmlpage.println("</pre>");
 
-		String base64 = request.getParameter("base64");
+		String base64 = servletRequest.getParameter("base64");
 		if (base64 != null) {
 			decoded = new String(decoder.decodeBuffer(base64));
 			htmlpage.println("<pre>Base64 decoded: " + decoded + "</pre>");
 		}
 
 		htmlpage.println("<b>HTML headers</b><br>");
-		Enumeration hdrnames = request.getHeaderNames();
+		Enumeration hdrnames = servletRequest.getHeaderNames();
 		htmlpage.println("<pre>");
 		while (hdrnames.hasMoreElements()) {
 			String hdrname = (String) hdrnames.nextElement();
-			htmlpage.println(hdrname + ": " + Tools.htmlEncode(request.getHeader(hdrname)));
+			htmlpage.println(hdrname + ": " + Tools.htmlEncode(servletRequest.getHeader(hdrname)));
 		}
 		htmlpage.println("</pre>");
 
@@ -146,18 +143,18 @@ public class HtmlInfo extends HttpServlet
 
 		htmlpage.println("<b>HTML authorization header</b><br>");
 		htmlpage.println("<pre>");
-		htmlpage.println("Encoded : " + request.getHeader("Authorization"));
+		htmlpage.println("Encoded : " + servletRequest.getHeader("Authorization"));
 		htmlpage.println("Decoded : " + decoded);
 		htmlpage.println("Username: " + username);
 		htmlpage.println("Password: " + password);
 		htmlpage.println("</pre>");
 
 		htmlpage.println("<b>HTML parameters</b><br>");
-		Enumeration parnames = request.getParameterNames();
+		Enumeration parnames = servletRequest.getParameterNames();
 		htmlpage.println("<pre>");
 		while (parnames.hasMoreElements()) {
 			String parname = (String) parnames.nextElement();
-			htmlpage.println(Tools.htmlEncode(parname + " = " + request.getParameter(parname)));
+			htmlpage.println(Tools.htmlEncode(parname + " = " + servletRequest.getParameter(parname)));
 		}
 		htmlpage.println("</pre>");
 

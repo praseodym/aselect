@@ -194,10 +194,13 @@ public class AuthSPServlet extends ASelectHttpServlet
 
 		try {
 			super.init(oServletConfig);
-			if (_systemLogger != null) // reinit
+			if (_systemLogger != null) { // reinit
 				_systemLogger.closeHandlers();
-			else
+			}
+			else {
 				_systemLogger = AuthSPSystemLogger.getHandle();
+				Utils.setSysLog(_systemLogger);
+			}
 
 			if (_authenticationLogger != null) // reinit
 				_authenticationLogger.closeHandlers();
@@ -418,9 +421,9 @@ public class AuthSPServlet extends ASelectHttpServlet
 	 * If the servlet is restartable, the request=restart is supported in the querystring. <br>
 	 * <br>
 	 * 
-	 * @param oHttpServletRequest
+	 * @param servletRequest
 	 *            the o http servlet request
-	 * @param oHttpServletResponse
+	 * @param servletResponse
 	 *            the o http servlet response
 	 * @throws ServletException
 	 *             the servlet exception
@@ -428,26 +431,23 @@ public class AuthSPServlet extends ASelectHttpServlet
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	@Override
-	public void doGet(HttpServletRequest oHttpServletRequest, HttpServletResponse oHttpServletResponse)
+	public void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ServletException
 	{
 		String sMethod = "doGet";
+		PrintWriter pwOut = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "AUTHSP GET { restartable="+_bRestartable);
 
 		if (_bRestartable) {
-			// turn off caching
-			setDisableCachingHttpHeaders(oHttpServletRequest, oHttpServletResponse);
-
 			// handle request=restart
-			String sRequest = oHttpServletRequest.getParameter("request");
+			String sRequest = servletRequest.getParameter("request");
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "request=" + sRequest);
 			String sResult = Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST;
 			if (sRequest != null) {
-				PrintWriter pwOut = null;
 				try {
-					pwOut = oHttpServletResponse.getWriter();
-					String sSharedSecret = oHttpServletRequest.getParameter("shared_secret");
-					String sLevel = oHttpServletRequest.getParameter("level");
+					pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+					String sSharedSecret = servletRequest.getParameter("shared_secret");
+					String sLevel = servletRequest.getParameter("level");
 					if (!Utils.hasValue(sSharedSecret)) {
 						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Parameter 'shared_secret' not found in request");
 					}

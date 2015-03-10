@@ -70,62 +70,65 @@ public class Xsaml20_HandleMetadata extends AbstractRequestHandler
 	/**
 	 * Process incoming request.
 	 * 
-	 * @param request
+	 * @param servletRequest
 	 *            HttpServletRequest.
-	 * @param response
+	 * @param servletResponse
 	 *            HttpServletResponse.
 	 * @return the request state
 	 * @throws ASelectException
 	 *             If processing of meta data request fails.
 	 */
-	public RequestState process(HttpServletRequest request, HttpServletResponse response)
+	public RequestState process(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		String sMethod = "process";
-		PrintWriter out;
+		PrintWriter pwOut = null;
 
 		try {
-			out = response.getWriter();
-			response.setContentType("text/xml; charset=utf-8");
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+
+			String sSharedSecret = servletRequest.getParameter("shared_secret");
+			if (!Utils.hasValue(sSharedSecret)) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Parameter 'shared_secret' not found in request");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+			if (!sSharedSecret.equals(_sMySharedSecret)) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid 'shared_secret' received");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+	
+			// We only accept this request from localhost
+			String sServerIp = Tools.getServerIpAddress(_systemLogger);
+			String sClientIp = servletRequest.getRemoteAddr();
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "ServerIp="+sServerIp+" ClientIp="+sClientIp);
+			if (!sServerIp.equals(sClientIp)) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Not called from the local server"+" client_ip="+sClientIp);
+				pwOut.println("This request must be called from the local server");
+			}
+			else {
+				String sList = servletRequest.getParameter("list");
+				String entityId = servletRequest.getParameter("metadata");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "list="+sList+" entityId=" + entityId);
+	
+				if (sList == null && entityId == null) {
+					pwOut.println("Parameter 'metadata' is missing!");
+				}
+				else {
+					MetaDataManagerIdp metadataMgr = MetaDataManagerIdp.getHandle();
+					metadataMgr.handleMetadataProvider(pwOut, entityId, sList != null);
+				}
+			}
 		}
 		catch (IOException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not handle the request", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-
-		String sSharedSecret = request.getParameter("shared_secret");
-		if (!Utils.hasValue(sSharedSecret)) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Parameter 'shared_secret' not found in request");
-			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-		}
-		if (!sSharedSecret.equals(_sMySharedSecret)) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid 'shared_secret' received");
-			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-		}
-
-		// We only accept this request from localhost
-		String sServerIp = Tools.getServerIpAddress(_systemLogger);
-		String sClientIp = request.getRemoteAddr();
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "ServerIp="+sServerIp+" ClientIp="+sClientIp);
-		if (!sServerIp.equals(sClientIp)) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Not called from the local server"+" client_ip="+sClientIp);
-			out.println("This request must be called from the local server");
-		}
-		else {
-			String sList = request.getParameter("list");
-			String entityId = request.getParameter("metadata");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "list="+sList+" entityId=" + entityId);
-
-			if (sList == null && entityId == null) {
-				out.println("Parameter 'metadata' is missing!");
-			}
-			else {
-				MetaDataManagerIdp metadataMgr = MetaDataManagerIdp.getHandle();
-				metadataMgr.handleMetadataProvider(out, entityId, sList != null);
+		finally {
+			if (pwOut != null) {
+				pwOut.flush();
+				pwOut.close();
 			}
 		}
-		out.flush();
-		out.close();
 		return null;
 	}
 

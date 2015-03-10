@@ -222,7 +222,7 @@ public class AuthenticationLogger
 			ConfigManager oConfigManager, Object oLogTargetConfig, SystemLogger oSystemLogger, String sWorkingDir)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			_bLogToDatabase = false;
@@ -286,7 +286,7 @@ public class AuthenticationLogger
 			SystemLogger oSystemLogger)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			// set default delimiter for back-up logging
@@ -431,14 +431,14 @@ public class AuthenticationLogger
 				}
 				catch (Exception e) {
 					try {
-						_systemLogger.log(Level.WARNING, MODULE, "log()",
+						_systemLogger.log(Level.WARNING, MODULE, "log",
 								"Logging to database failed (first try), retrying.");
 
 						connect();
 						logToDB(oLogFields);
 					}
 					catch (Exception eE) {
-						_systemLogger.log(Level.WARNING, MODULE, "log()",
+						_systemLogger.log(Level.WARNING, MODULE, "log",
 								"Logging to database failed (second try) using back-up logger.");
 						logToFile(oLogFields);
 					}
@@ -662,7 +662,7 @@ public class AuthenticationLogger
 	 */
 	private synchronized void disconnect()
 	{
-		String sMethod = new String("disconnect()");
+		String sMethod = new String("disconnect");
 
 		try {
 			if (_bLogToDatabase) {
@@ -762,7 +762,7 @@ public class AuthenticationLogger
 	private void readConfig(ConfigManager oConfigManager, Object oLogTargetConfig)
 	throws ASelectException
 	{
-		String sMethod = "readConfig()";
+		String sMethod = "readConfig";
 
 		Object oTable = null;
 		Object oColumn = null;
@@ -863,7 +863,7 @@ public class AuthenticationLogger
 	private Vector retrieveColumnTypes()
 	throws ASelectException
 	{
-		String sMethod = "retrieveColumnTypes()";
+		String sMethod = "retrieveColumnTypes";
 		Statement oStatement = null;
 		ResultSet rsSelect = null;
 		ResultSetMetaData rsmdTypes = null;
@@ -938,7 +938,7 @@ public class AuthenticationLogger
 	private StringBuffer createStatementQuery()
 	throws ASelectException
 	{
-		String sMethod = "createStatementQuery()";
+		String sMethod = "createStatementQuery";
 
 		StringBuffer sbPreparedQuery = null;
 		try {

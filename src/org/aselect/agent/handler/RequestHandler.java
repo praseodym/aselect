@@ -325,20 +325,22 @@ public class RequestHandler extends Thread
 						ASelectAgentSystemLogger.getHandle());
 			}
 			else { // Instantiate a RawMessageCreator object
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN raw");
 				oMessageCreator = new RawMessageCreator(ASelectAgentSystemLogger.getHandle());
 			}
 
 			// Create Communicator object with the specified messagecreator
 			Communicator xCommunicator = new Communicator(oMessageCreator);
-
+			
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN comInit");
 			// Initialize the communicator
-			if (xCommunicator.init(oTCPProtocolRequest, oTCPProtocolResponse)) {
+			if (xCommunicator.comInit(oTCPProtocolRequest, oTCPProtocolResponse)) {
 				// Call processRequest for procesing
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN prc T=" + System.currentTimeMillis()+" port="+port);
 				processRequest(xCommunicator, port);
 
 				// Send our response
-				if (!xCommunicator.send()) {
+				if (!xCommunicator.comSend()) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not send response to caller.");
 				}
 			}
@@ -350,9 +352,7 @@ public class RequestHandler extends Thread
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not initialize request.", eAC);
 		}
 		catch (Exception e) {
-			StringBuffer sbError = new StringBuffer("Exception: \"");
-			sbError.append(e);
-			sbError.append("\"");
+			StringBuffer sbError = new StringBuffer("Exception: \"").append(e).append("\"");
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
 		}
 		finally { // Close socket

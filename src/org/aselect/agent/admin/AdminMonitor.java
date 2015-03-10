@@ -253,7 +253,7 @@ public class AdminMonitor extends JFrame implements TableModelListener
 	 */
 	public void stop()
 	{
-		String sMethod = "stop()";
+		String sMethod = "stop";
 
 		if (_ticketsMonitorModel != null)
 			_ticketsMonitorModel.stop();

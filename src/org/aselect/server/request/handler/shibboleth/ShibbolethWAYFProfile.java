@@ -242,9 +242,9 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 	 * <br>
 	 * <br>
 	 * 
-	 * @param request
+	 * @param servletRequest
 	 *            the request
-	 * @param response
+	 * @param servletResponse
 	 *            the response
 	 * @return the request state
 	 * @throws ASelectException
@@ -252,30 +252,30 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 	 * @see org.aselect.server.request.handler.AbstractRequestHandler#process(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
-	public RequestState process(HttpServletRequest request, HttpServletResponse response)
+	public RequestState process(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		String sMethod = "process";
 		try {
-			String sProviderId = request.getParameter("providerId"); // application ID
+			String sProviderId = servletRequest.getParameter("providerId"); // application ID
 			if (sProviderId == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing request parameter 'providerId'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 
-			String sShire = request.getParameter("shire"); // response address
+			String sShire = servletRequest.getParameter("shire"); // response address
 			if (sShire == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing request parameter 'shire'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 
-			String sTarget = request.getParameter("target"); // information
+			String sTarget = servletRequest.getParameter("target"); // information
 			if (sTarget == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing request parameter 'target'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 
-			String sTime = request.getParameter("time"); // current time at the application
+			String sTime = servletRequest.getParameter("time"); // current time at the application
 			if (sTime != null) {
 				long lOffset = 0;
 				try {
@@ -302,7 +302,7 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 				}
 			}
 
-			String sIdP = request.getParameter("idp");
+			String sIdP = servletRequest.getParameter("idp");
 
 			if (sIdP != null) {
 				if (!_vIdPs.contains(sIdP)) {
@@ -310,11 +310,11 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 
-				handleSubmit(sIdP, sTarget, sShire, sProviderId, response);
+				handleSubmit(sIdP, sTarget, sShire, sProviderId, servletResponse);
 			}
 			else {
 				String sSelectedIdP = null;
-				String sCookieValue = HandlerTools.getCookieValue(request, idp_COOKIE, _systemLogger);
+				String sCookieValue = HandlerTools.getCookieValue(servletRequest, idp_COOKIE, _systemLogger);
 
 				if (sCookieValue == null || !_vIdPs.contains(sCookieValue)) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid '" + idp_COOKIE
@@ -322,8 +322,8 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 				sSelectedIdP = sCookieValue;
-				String sAction = request.getRequestURL().toString();
-				handleShowForm(sSelectedIdP, sAction, sTarget, sShire, sProviderId, response);
+				String sAction = servletRequest.getRequestURL().toString();
+				shibbHandleShowForm(sSelectedIdP, sAction, sTarget, sShire, sProviderId, servletRequest, servletResponse);
 			}
 		}
 		catch (ASelectException e) {
@@ -376,20 +376,20 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 	 *            the shire parameter, copied from the request
 	 * @param sProviderId
 	 *            the providerid parameter, copied from the request
-	 * @param response
+	 * @param servletResponse
 	 *            the HttpServletResponse to which the page will be shown
 	 * @throws ASelectException
 	 *             if the page can't be shown
 	 */
-	private void handleShowForm(String sSelectedIdP, String sAction, String sTarget, String sShire, String sProviderId,
-			HttpServletResponse response)
+	private void shibbHandleShowForm(String sSelectedIdP, String sAction, String sTarget, String sShire, String sProviderId,
+			HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		String sMethod = "handleSubmit";
 		PrintWriter pwOut = null;
 
 		try {
-			pwOut = response.getWriter();
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 			String sTemplate = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(),
 					null/*language*/, _sTemplateName, null, null/*friendly_name*/, null/*version*/);
 

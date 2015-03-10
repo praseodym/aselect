@@ -412,18 +412,18 @@ public class RequestHandlerFactory
 	/**
 	 * Shows the main A-Select Error page with the appropriate errors. <br>
 	 * <br>
-	 * @param request - the HTTP request
-	 * @param response - the HTTP response
+	 * @param servletRequest - the HTTP request
+	 * @param servletResponse - the HTTP response
 	 * @param sErrorCode - error code to display
 	 * @throws ASelectException - on failure
 	 */
-	protected void showErrorPage(HttpServletRequest request, HttpServletResponse response, String sErrorCode)
+	protected void showErrorPage(HttpServletRequest servletRequest, HttpServletResponse servletResponse, String sErrorCode)
 	throws ASelectException
 	{
 		String sMethod = "showErrorPage";
 		PrintWriter pwOut = null;
 		
-		Locale loc = request.getLocale();
+		Locale loc = servletRequest.getLocale();
 		String _sUserLanguage = loc.getLanguage();
 		String _sUserCountry = loc.getCountry();
 		String sErrorMessage = _configManager.getErrorMessage(MODULE, sErrorCode, _sUserLanguage, _sUserCountry);
@@ -436,10 +436,9 @@ public class RequestHandlerFactory
 			sErrorForm = Utils.replaceString(sErrorForm, "[language]", _sUserLanguage);
 			sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), null, _systemLogger);
 			// updateTemplate() accepts a null session to remove unused special fields!
-			sErrorForm = _configManager.updateTemplate(sErrorForm, null /* no session available */, request);
+			sErrorForm = _configManager.updateTemplate(sErrorForm, null /* no session available */, servletRequest);
 
-			pwOut = response.getWriter();
-			response.setContentType("text/html; charset=utf-8");
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 			Tools.pauseSensorData(_configManager, _systemLogger, null);  //20111102, no session available at this point
 			pwOut.println(sErrorForm);
 		}

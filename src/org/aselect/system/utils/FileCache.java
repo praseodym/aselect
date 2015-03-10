@@ -105,11 +105,12 @@ public class FileCache
 		BufferedReader brInput = null;
 		String sResult = "", sLine;
 		try {
-			brInput = new BufferedReader(new InputStreamReader(new FileInputStream(fFile)));
+			brInput = new BufferedReader(new InputStreamReader(new FileInputStream(fFile)/*, "UTF-8"*/));
 			while ((sLine = brInput.readLine()) != null) {
 				sResult += sLine + "\n";
 			}
 			addFile(sFileName, sResult, now, oSysLog);
+			//oSysLog.log(Level.INFO, MODULE, sMethod, "\n"+sResult);
 			return sResult;
 		}
 		catch (IOException e) {

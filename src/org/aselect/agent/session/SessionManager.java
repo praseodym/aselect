@@ -145,7 +145,7 @@ public class SessionManager
 	 */
 	public boolean init()
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			_oConfigManager = ASelectAgentConfigManager.getHandle();
@@ -200,7 +200,7 @@ public class SessionManager
 		if (_oSessionTable != null)
 			_oSessionTable.destroy();
 
-		_systemLogger.log(Level.INFO, MODULE, "stop()", "Session manager stopped.");
+		_systemLogger.log(Level.INFO, MODULE, "stop", "Session manager stopped.");
 	}
 
 	/**
@@ -229,7 +229,7 @@ public class SessionManager
 	 */
 	public boolean createSession(String sSessionId, HashMap htSessionContext)
 	{
-		String sMethod = "createSession()";
+		String sMethod = "createSession";
 
 		try {
 			// RM_14_01
@@ -290,12 +290,12 @@ public class SessionManager
 	{
 		try {
 			synchronized (_oSessionTable) {
-				_systemLogger.log(Level.FINER, MODULE, "killSession()", "Kill SessionId=" + sSessionId);
+				_systemLogger.log(Level.FINER, MODULE, "killSession", "Kill SessionId=" + sSessionId);
 				_oSessionTable.remove(sSessionId);
 			}
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, "killSession()", "Exception: " + e.getMessage(), e);
+			_systemLogger.log(Level.SEVERE, MODULE, "killSession", "Exception: " + e.getMessage(), e);
 		}
 	}
 
@@ -334,10 +334,10 @@ public class SessionManager
 
 		try {
 			htResponse = (HashMap) _oSessionTable.get(sSessionId);
-			_systemLogger.log(Level.FINEST, MODULE, "getSessionContext()", "SessionId=" + sSessionId + ", Context=" + htResponse);
+			_systemLogger.log(Level.FINEST, MODULE, "getSessionContext", "SessionId=" + sSessionId + ", Context=" + htResponse);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, "getSessionContext()", "Exception: " + e.getMessage());
+			_systemLogger.log(Level.WARNING, MODULE, "getSessionContext", "Exception: " + e.getMessage());
 		}
 
 		return htResponse;
@@ -368,7 +368,7 @@ public class SessionManager
 			htResponse = _oSessionTable.getAll();
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, "getSessionContexts()", "Exception: " + e.getMessage(), e);
+			_systemLogger.log(Level.SEVERE, MODULE, "getSessionContexts", "Exception: " + e.getMessage(), e);
 		}
 		return htResponse;
 	}

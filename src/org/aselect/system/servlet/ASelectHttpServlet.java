@@ -130,39 +130,6 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	}
 
 	/**
-	 * Set HTTP headers that disable browser caching. <br>
-	 * <br>
-	 * <b>Description: </b> <br>
-	 * Sets HTTP 1.0 or HTTP 1.1 disable caching headers depending on the request. <br>
-	 * <br>
-	 * <b>Preconditions: </b>
-	 * <ul>
-	 * <li><code>oRequest != null</code></li>
-	 * <li><code>oResponse != null</code></li>
-	 * </ul>
-	 * <br>
-	 * <b>Postconditions: </b> <br>
-	 * <code>oResponse</code> contains caching disable headers. <br>
-	 * 
-	 * @param oRequest
-	 *            The HTTP request.
-	 * @param oResponse
-	 *            The HTTP response.
-	 */
-	public void setDisableCachingHttpHeaders(HttpServletRequest oRequest, HttpServletResponse oResponse)
-	{
-		// turn off caching
-		if (oRequest.getProtocol().equalsIgnoreCase("HTTP/1.0")) {
-			oResponse.setHeader("Pragma", "no-cache");
-		}
-		else if (oRequest.getProtocol().equalsIgnoreCase("HTTP/1.1")) {
-			oResponse.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-		}
-		// turn off caching by proxies
-		oResponse.setHeader("Expires", "-1");
-	}
-
-	/**
 	 * Show an HTML error page. <br>
 	 * <br>
 	 * <b>Description:</b> <br>

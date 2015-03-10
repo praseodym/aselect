@@ -91,7 +91,7 @@ public class SAMService extends SAMServiceServlet
 	{
 		_systemLogger = AuthSPSystemLogger.getHandle();
 		super.init(oServletConfig);
-		_systemLogger.log(Level.INFO, "SAMService", "init()", "Successfully started SAM Service.");
+		_systemLogger.log(Level.INFO, "SAMService", "init", "Successfully started SAM Service.");
 	}
 
 	/**
@@ -156,7 +156,7 @@ public class SAMService extends SAMServiceServlet
 				iOperational = 1;
 			}
 			else {
-				getSystemLogger().log(Level.WARNING, MODULE, "operational()",
+				getSystemLogger().log(Level.WARNING, MODULE, "operational",
 						"Can't find AuthSP Server attributes in servlet context.");
 			}
 		}

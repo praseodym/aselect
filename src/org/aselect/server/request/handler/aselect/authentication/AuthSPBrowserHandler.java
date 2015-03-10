@@ -151,9 +151,8 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	throws ASelectException
 	{
 		String sRequest = (String) htServiceRequest.get("request");
-
 		if (sRequest == null && _servletRequest.getParameter("authsp") != null) {
-			handleAuthSPResponse(htServiceRequest);
+			handleAuthSPResponse(htServiceRequest, pwOut);
 		}
 		else if (sRequest.equals("error")) {
 			handleError(htServiceRequest);
@@ -174,7 +173,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void handleAuthSPResponse(HashMap htServiceRequest)
+	private void handleAuthSPResponse(HashMap htServiceRequest, PrintWriter pwOut)
 	throws ASelectException
 	{
 		String sMethod = "handleAuthSPResponse";
@@ -366,7 +365,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 					_htSessionContext.put("user_state", "state_nextauthsp");
 					_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);
 					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
-					_servletResponse.getWriter().println(sNextauthspForm);
+					pwOut.println(sNextauthspForm);
 				}
 				return;
 			}

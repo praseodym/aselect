@@ -139,7 +139,7 @@ public class AuthorizationRuleParser
 	public void parse()
 	throws ASelectAuthorizationException
 	{
-		final String sMethod = "parse()";
+		final String sMethod = "parse";
 		try {
 			// scan first token
 			_oCurrentToken = _oScanner.scan();
@@ -188,7 +188,7 @@ public class AuthorizationRuleParser
 	private EvaluationTree parseExpression()
 	throws ASelectAuthorizationException
 	{
-		final String sMethod = "parseExpression()";
+		final String sMethod = "parseExpression";
 		// Parse SimpleExpression
 		EvaluationTree tNew = parseSimpleExpression();
 		// Parse LogicAndExpression or LogicOrExpression
@@ -221,7 +221,7 @@ public class AuthorizationRuleParser
 	private EvaluationTree parseSimpleExpression()
 	throws ASelectAuthorizationException
 	{
-		final String sMethod = "parseSimpleExpression()";
+		final String sMethod = "parseSimpleExpression";
 		StringBuffer sb = null;
 		EvaluationTree tNew = null;
 		// accept first token
@@ -313,7 +313,7 @@ public class AuthorizationRuleParser
 	private EvaluationTree parseLogicExpression(EvaluationTree tLeft)
 	throws ASelectAuthorizationException
 	{
-		final String sMethod = "parseLogicExpression()";
+		final String sMethod = "parseLogicExpression";
 		// accept is '&' or '|'
 		AuthorizationRuleToken oToken = acceptIt();
 		EvaluationTree tRight = parseSimpleExpression();
@@ -345,7 +345,7 @@ public class AuthorizationRuleParser
 	private AuthorizationRuleToken acceptIt()
 	throws ASelectAuthorizationException
 	{
-		final String sMethod = "acceptIt()";
+		final String sMethod = "acceptIt";
 		AuthorizationRuleToken oToken = _oCurrentToken;
 		if (_oCurrentToken != null) {
 			try {
@@ -376,7 +376,7 @@ public class AuthorizationRuleParser
 	private AuthorizationRuleToken acceptKind(int iExpectedKind)
 	throws ASelectAuthorizationException
 	{
-		final String sMethod = "acceptKind()";
+		final String sMethod = "acceptKind";
 		AuthorizationRuleToken oToken = _oCurrentToken;
 		if (_oCurrentToken != null && _oCurrentToken._iKind == iExpectedKind) {
 			// Scan next token
@@ -410,7 +410,7 @@ public class AuthorizationRuleParser
 	private AuthorizationRuleToken acceptGroup(int iExpectedGroup)
 	throws ASelectAuthorizationException
 	{
-		final String sMethod = "acceptGroup()";
+		final String sMethod = "acceptGroup";
 		AuthorizationRuleToken oToken = _oCurrentToken;
 		if (_oCurrentToken != null && _oCurrentToken._iGroup == iExpectedGroup) {
 			try {

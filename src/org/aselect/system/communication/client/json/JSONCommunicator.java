@@ -137,7 +137,7 @@ public class JSONCommunicator implements IClientCommunicator
 		String sMethod = "sendStringMessage";
 
 		try {  // Send the message
-			sResponse = DataCommunicator.send(_systemLogger, sMessage, sTarget);
+			sResponse = DataCommunicator.dataComSend(_systemLogger, sMessage, sTarget);
 		}
 		catch (java.net.MalformedURLException eMU) {
 			StringBuffer sbBuffer = new StringBuffer("Invalid URL: ");

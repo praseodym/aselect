@@ -32,6 +32,7 @@ import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
+import org.aselect.system.utils.Utils;
 import org.opensaml.common.SignableSAMLObject;
 import org.opensaml.common.binding.BasicSAMLMessageContext;
 import org.opensaml.saml2.core.Issuer;
@@ -121,21 +122,24 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 	/**
 	 * Handle redirect logout response.
 	 * 
-	 * @param httpRequest
+	 * @param servletRequest
 	 *            the http request
-	 * @param httpResponse
+	 * @param servletResponse
 	 *            the http response
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void handleRedirectLogoutResponse(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
+	private void handleRedirectLogoutResponse(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		String sMethod = "handleRedirectLogoutResponse";
+		PrintWriter pwOut = null;
 
 		try {
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+
 			BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
-			messageContext.setInboundMessageTransport(new HttpServletRequestAdapter(httpRequest));
+			messageContext.setInboundMessageTransport(new HttpServletRequestAdapter(servletRequest));
 
 			Saml20_RedirectDecoder decoder = new Saml20_RedirectDecoder();
 			decoder.decode(messageContext);
@@ -168,12 +172,11 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 			if (is_bVerifySignature()) {
 				// The SAMLRequest must be signed, if not the message can't be trusted
 				// and a response message will be sent to the browser
-				if (!SamlTools.isSigned(httpRequest)) {
+				if (!SamlTools.isSigned(servletRequest)) {
 					String errorMessage = "SAML message must be signed.";
 					// RM_60_01
 					// exception in all other cases?
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, errorMessage);
-					PrintWriter pwOut = httpResponse.getWriter();
 					pwOut.write(errorMessage);
 					return;
 				}
@@ -188,16 +191,15 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Found PublicKey for entityId: " + sEntityId);
-				if (!SamlTools.verifySignature(publicKey, httpRequest)) {
+				if (!SamlTools.verifySignature(publicKey, servletRequest)) {
 					String errorMessage = "Signing of SAML message is not correct.";
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, errorMessage);
-					PrintWriter pwOut = httpResponse.getWriter();
 					pwOut.write(errorMessage);
 					return;
 				}
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Signature is correct.");
 			}
-			handleLogoutResponse(httpRequest, httpResponse, (LogoutResponse) samlMessage);
+			handleLogoutResponse(servletRequest, servletResponse, (LogoutResponse) samlMessage);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -205,6 +207,10 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+		finally {
+			if (pwOut != null)
+				pwOut.close();
 		}
 	}
 

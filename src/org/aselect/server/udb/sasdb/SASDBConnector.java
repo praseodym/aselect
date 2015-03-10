@@ -132,7 +132,7 @@ public class SASDBConnector implements IUDBConnector
 	public void init(Object oConfigSection)
 	throws ASelectUDBException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		ASelectConfigManager oASelectConfigManager = null;
 		Object oUdbStorage = null;
@@ -464,7 +464,7 @@ public class SASDBConnector implements IUDBConnector
 	public String getUserAttributes(String sUserId, String sAuthSPId)
 	throws ASelectUDBException
 	{
-		String sMethod = "getUserAttributes()";
+		String sMethod = "getUserAttributes";
 
 		// HashMap htResponse = new HashMap();
 		String sUserAttribute = null;

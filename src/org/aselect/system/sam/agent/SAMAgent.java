@@ -125,7 +125,7 @@ public class SAMAgent
 	public void init(ConfigManager oConfigManager, SystemLogger oSystemLogger)
 	throws ASelectSAMException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		Object oSAMSection = null;
 		Object oAgentSection = null;

@@ -121,9 +121,9 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 	 * <br>
 	 * <br>
 	 * 
-	 * @param request
+	 * @param servletRequest
 	 *            the request
-	 * @param response
+	 * @param servletResponse
 	 *            the response
 	 * @return the request state
 	 * @throws ASelectException
@@ -131,16 +131,19 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 	 * @see org.aselect.server.request.handler.AbstractRequestHandler#process(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
-	public RequestState process(HttpServletRequest request, HttpServletResponse response)
+	public RequestState process(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		String sMethod = "process";
+		PrintWriter pwOut = null;
 		try {
-			String sSharedSecret = request.getParameter("shared_secret");
-			String sRequest= request.getParameter("request");
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+
+			String sSharedSecret = servletRequest.getParameter("shared_secret");
+			String sRequest= servletRequest.getParameter("request");
 
 			String sServerIp = Tools.getServerIpAddress(_systemLogger);
-			String sClientIp = request.getRemoteAddr();
+			String sClientIp = servletRequest.getRemoteAddr();
 			_systemLogger.log(Level.FINE, MODULE, sMethod, "ServerIp="+sServerIp+" ClientIp="+sClientIp);
 			if (!sServerIp.equals(sClientIp)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Handler not called from the local server");
@@ -163,7 +166,7 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 				sResult = (rc == 0)? Errors.ERROR_ASELECT_SUCCESS : Errors.ERROR_ASELECT_INTERNAL_ERROR;
 			}
 			else if ("logging".equals(sRequest)) {
-				String sLevel= request.getParameter("level");
+				String sLevel= servletRequest.getParameter("level");
 				if (Utils.hasValue(sLevel)) {
 					Level level = Audit.parse(sLevel);
 					ASelectSystemLogger.getHandle().setLevel(level);
@@ -175,10 +178,7 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 			}
 			// else INVALID_REQUEST
 			
-			PrintWriter pwOut = response.getWriter();
 			pwOut.println("result_code=" + sResult);
-			if (pwOut != null)
-				pwOut.close();
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -186,6 +186,9 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+		finally {
+			if (pwOut != null) pwOut.close();
 		}
 
 		return new RequestState(null);

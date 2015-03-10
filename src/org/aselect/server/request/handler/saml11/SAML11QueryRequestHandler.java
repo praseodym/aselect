@@ -36,6 +36,7 @@ import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Utils;
 import org.opensaml.SAMLAction;
 import org.opensaml.SAMLAssertion;
 import org.opensaml.SAMLAttribute;
@@ -298,7 +299,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 		SAMLSubjectStatement oSAMLSubjectStatement = null;
 
 		try {
-			response.setContentType("text/xml; charset=utf-8");
+			Utils.prepareForHttpResponse(request, response, "text/html");  // default text
 
 			try {
 				oSAMLRequest = _oSAMLBinding.receive(request, 1);

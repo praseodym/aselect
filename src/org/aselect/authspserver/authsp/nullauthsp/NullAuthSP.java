@@ -267,8 +267,8 @@ public class NullAuthSP extends AbstractAuthSP
 		String sQueryString = "";
 		String sLanguage = null;
 		
-		servletResponse.setContentType("text/html; charset=utf-8");
-		setDisableCachingHttpHeaders(servletRequest, servletResponse);
+		PrintWriter pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
+
 		sQueryString = servletRequest.getQueryString();
 		HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, true);  // URL decoded result
 
@@ -359,8 +359,7 @@ public class NullAuthSP extends AbstractAuthSP
 	{
 		String sMethod = "doPost";
 
-		servletResponse.setContentType("text/html; charset=utf-8");
-		setDisableCachingHttpHeaders(servletRequest, servletResponse);
+		PrintWriter pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "NULL POST {" + servletRequest + ", qry="
 				+ servletRequest.getQueryString());
@@ -381,7 +380,6 @@ public class NullAuthSP extends AbstractAuthSP
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error", e);
-
 			throw new ServletException(Errors.ERROR_NULL_INTERNAL);
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "} NULL POST");
@@ -415,27 +413,23 @@ public class NullAuthSP extends AbstractAuthSP
 	 *             Signals that an I/O exception has occurred.
 	 */
 	private void handleResult(HashMap servletRequest, HttpServletResponse servletResponse,
-								String sResultCode, String sLanguage)
+			String sResultCode, String sLanguage)
 	throws IOException
 	{
 		String sMethod = "handleResult";
-
 		PrintWriter pwOut = null;
+
 		try {
-			pwOut = servletResponse.getWriter();
 			if (sResultCode.equals(Errors.ERROR_NULL_SUCCESS)) {
 				String sRid = (String)servletRequest.get("rid");
 				String sAsUrl = (String)servletRequest.get("as_url");
 				String sAsId = (String)servletRequest.get("a-select-server");
-				if (sRid == null || sAsUrl == null || sAsId == null) {
-					getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
-				}
-				else {
+				if (sRid != null && sAsUrl != null && sAsId != null) {
 					StringBuffer sbSignature = new StringBuffer(sRid);
 					sbSignature.append(sAsUrl);
 					sbSignature.append(sResultCode);
 					sbSignature.append(sAsId);
-					
+
 					String sSignature = _cryptoEngine.generateSignature(sbSignature.toString());
 					sSignature = URLEncoder.encode(sSignature, "UTF-8");
 					StringBuffer sbRedirect = new StringBuffer(sAsUrl);
@@ -445,16 +439,18 @@ public class NullAuthSP extends AbstractAuthSP
 					sbRedirect.append("&signature=").append(sSignature);
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIR " + sbRedirect);
 					servletResponse.sendRedirect(sbRedirect.toString());
+					return;
 				}
 			}
-			else {
-				getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
-			}
+			pwOut = servletResponse.getWriter();
+			getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
+			
 		}
 		catch (ASelectException eAS) // could not generate signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate NULL AuthSP signature", eAS);
 			try {
+				pwOut = servletResponse.getWriter();
 				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
 			}
 			catch (ASelectException e) {
@@ -465,6 +461,7 @@ public class NullAuthSP extends AbstractAuthSP
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode NULL AuthSP signature", eUE);
 			try {
+				pwOut = servletResponse.getWriter();
 				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
 			}
 			catch (ASelectException e) {

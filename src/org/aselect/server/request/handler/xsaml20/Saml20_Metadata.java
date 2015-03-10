@@ -30,6 +30,7 @@ import org.aselect.server.request.handler.ProtoRequestHandler;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Utils;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.xml.ConfigurationException;
@@ -223,45 +224,31 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	/**
 	 * Handle meta data request.
 	 * 
-	 * @param httpRequest
+	 * @param servletRequest
 	 *            the http request
-	 * @param httpResponse
+	 * @param servletResponse
 	 *            the http response
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void handleMetaDataRequest(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
+	private void handleMetaDataRequest(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
 		String sMethod = "handleMetaDataRequest";
-//		String sLocalIssuer = null;
 		
 		// 20100429, Bauke: the caller can replace the default EntityID by the specified partner's <issuer>
-		String remoteID = httpRequest.getParameter("id");
-		// RH, 20110111, so
-		// pushed down to SP Metadata_Handler
-//		if (remoteID != null) {
-//			// find "id" in the partner's section
-//			PartnerData partnerData = MetaDataManagerSp.getHandle().getPartnerDataEntry(remoteID);
-//			if (partnerData != null)
-//				sLocalIssuer = partnerData.getLocalIssuer();
-//		}
-//		String mdxml = createMetaDataXML(sLocalIssuer);
-		// RH, 20110111, eo
+		String remoteID = servletRequest.getParameter("id");
 		
 		// remoteID can be null
 		String mdxml = createMetaDataXML(remoteID);	// RH, 20110111, n
 
-		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "metadatXML file for entityID " + getEntityIdIdp() + " " + mdxml);
-		httpResponse.setContentType("application/samlmetadata+xml");
-
-		PrintWriter out;
+		PrintWriter pwOut = null;
 		try {
-			out = httpResponse.getWriter();
-			out.println(mdxml);
-			out.flush();
-			out.close();
+			pwOut = Utils.prepareForHtmlOutput(servletRequest, servletResponse, "application/samlmetadata+xml");
+			pwOut.println(mdxml);
+			pwOut.flush();
+			pwOut.close();
 		}
 		catch (IOException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not handle the request", e);

@@ -217,22 +217,22 @@ public class IDPFHandler extends ProtoRequestHandler
 	/**
 	 * Process incoming request.<br>
 	 * 
-	 * @param request
+	 * @param servletRequest
 	 *            HttpServletRequest.
-	 * @param response
+	 * @param servletResponse
 	 *            HttpServletResponse.
 	 * @return the request state
 	 * @throws ASelectException
 	 *             If processing of  data request fails.
 	 */
-	public RequestState process(HttpServletRequest request, HttpServletResponse response)
+	public RequestState process(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{		
 		String sMethod = "process";
 		String uid = defaultUID;
 		String extractedAselect_credentials = null;
 	    
-    	extractedAselect_credentials = request.getParameter("aselect_credentials");
+    	extractedAselect_credentials = servletRequest.getParameter("aselect_credentials");
 
     	if (extractedAselect_credentials == null) {	// For now we don't care about previous authentication, let aselect handle that
 	    	
@@ -294,7 +294,7 @@ public class IDPFHandler extends ProtoRequestHandler
 			}
 			_htSessionContext = setupSessionContext(_htSessionContext);
 
-			String javaxSessionid = request.getSession().getId();
+			String javaxSessionid = servletRequest.getSession().getId();
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "idpfsessionid: " +javaxSessionid);
 
 			_htSessionContext.put("idpfsessionid", javaxSessionid);
@@ -312,7 +312,7 @@ public class IDPFHandler extends ProtoRequestHandler
 						"&rid=" + extractedRid;
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "Requesting login through redirect with redirectURL: " + redirectURL);
 				
-	    		response.sendRedirect(redirectURL);
+	    		servletResponse.sendRedirect(redirectURL);
 			}
 			catch (UnsupportedEncodingException e1) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not URLEncode to UTF-8, this should not happen!");
@@ -327,7 +327,7 @@ public class IDPFHandler extends ProtoRequestHandler
     		// This should be the aselectserver response
     		
     		// check the session for validity
-			String javaxSessionid = request.getSession().getId();
+			String javaxSessionid = servletRequest.getSession().getId();
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "javaxSessionid: " +javaxSessionid);
 
 			String org_javaxSessionid = (String)_htSessionContext.get("idpfsessionid");
@@ -338,7 +338,7 @@ public class IDPFHandler extends ProtoRequestHandler
 			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Handle the aselectserver response");
 			
-			String finalResult  = verify_credentials(request, extractedAselect_credentials);
+			String finalResult  = verify_credentials(servletRequest, extractedAselect_credentials);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "finalResult after verify_credentials: " + finalResult);
 			
     		String extractedAttributes = finalResult.replaceFirst(".*attributes=([^&]*).*$", "$1");
@@ -386,7 +386,7 @@ public class IDPFHandler extends ProtoRequestHandler
 	    			// Keep logging short:
 	    			_systemLogger.log(Level.FINER, MODULE, sMethod, "Template="+getPostTemplate()+" sInputs="+sInputs+" ...");
 
-	    			handlePostForm(sSelectForm, getEndpointurl(), sInputs, response);
+	    			handlePostForm(sSelectForm, getEndpointurl(), sInputs, servletRequest, servletResponse);
 	    		}
 	    		else {	// for now we only allow POST
 	    			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No POST template found");

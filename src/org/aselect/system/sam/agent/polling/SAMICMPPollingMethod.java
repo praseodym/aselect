@@ -172,7 +172,7 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 	public boolean poll()
 	{
 		StringBuffer sbError = new StringBuffer(MODULE);
-		String sMethod = "poll()";
+		String sMethod = "poll";
 
 		boolean bPing = false;
 		Process oPingProcess = null;
@@ -231,7 +231,7 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 	throws ASelectSAMException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "parseJDBCString()";
+		String sMethod = "parseJDBCString";
 		URI uriResponse = null;
 
 		try {
@@ -274,7 +274,7 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 	private String guessHost(String sUri)
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "findHost()";
+		String sMethod = "findHost";
 		String hostResponse = null;
 
 		StringTokenizer stUri = new StringTokenizer(sUri, ":;\\");	// maybe some more needed ( note also want to find backslash)

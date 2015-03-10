@@ -30,6 +30,7 @@ import org.aselect.server.request.handler.AbstractRequestHandler;
 import org.aselect.server.request.handler.saml11.common.AssertionSessionManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Utils;
 import org.opensaml.SAMLAssertion;
 import org.opensaml.SAMLBinding;
 import org.opensaml.SAMLBindingFactory;
@@ -116,7 +117,7 @@ public class SAML11ArtifactRequestHandler extends AbstractRequestHandler
 		SAMLAssertion oSAMLAssertion = null;
 
 		try {
-			response.setContentType("text/xml; charset=utf-8");
+			Utils.prepareForHttpResponse(request, response, "text/html");  // default text
 
 			String sShire = request.getRequestURL().toString();
 
@@ -234,7 +235,6 @@ public class SAML11ArtifactRequestHandler extends AbstractRequestHandler
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not send failure over SAML binding", e);
-
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 
 		}

@@ -444,7 +444,7 @@ public class SAML11RequestHandler extends AbstractRequestHandler
 			String sIP = request.getRemoteAddr();
 			String sHost = request.getRemoteHost();
 
-			oWebSSOProfile.process(htResponse, response, sIP, sHost);
+			oWebSSOProfile.process(htResponse, request, response, sIP, sHost);
 		}
 		catch (ASelectException e) {
 			throw e;

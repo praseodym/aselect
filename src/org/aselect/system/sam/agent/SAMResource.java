@@ -161,7 +161,7 @@ public class SAMResource
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger oSystemLogger)
 	throws ASelectSAMException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		// must always be set, even if no polling method is configured
 		_oConfiguredAttributesSection = oConfigSection;
@@ -366,7 +366,7 @@ public class SAMResource
 		@Override
 		public void run()
 		{
-			String sMethod = "run()";
+			String sMethod = "run";
 
 			while (_bRunThread) {
 				try {

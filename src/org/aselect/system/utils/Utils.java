@@ -60,6 +60,7 @@ package org.aselect.system.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -76,6 +77,9 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.communication.server.IInputMessage;
@@ -110,7 +114,13 @@ public class Utils
 	private static final String ENCODED_BRACES = "%5B%5D";
 
 	private static final String MODULE = "Utils";
-
+	
+	private static SystemLogger _oSysLog = null;
+	public static void setSysLog(SystemLogger sysLog)
+	{
+		_oSysLog = sysLog;
+	}
+	
 	/**
 	 * Returns an int from 0 to 15 corresponding to the specified hex digit. <br>
 	 * <br>
@@ -1364,4 +1374,110 @@ public class Utils
 							// 20141118 old: getParam(_oASelectConfigSection, "organization_friendly_name"));
 		return sTemplate;
 	}
+
+	/**
+	 * Prepare for html output.
+	 * 
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @return the newly created PrintWriter
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 */
+	public static PrintWriter prepareForHtmlOutput(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
+	throws IOException
+	{
+		return prepareForHtmlOutput(servletRequest, servletResponse, null);
+	}
+
+	/**
+	 * Prepare for html output. Content type can be specified
+	 * 
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param sContentType
+	 *            the content type
+	 * @return the newly created PrintWriter
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 */
+	public static PrintWriter prepareForHtmlOutput(HttpServletRequest servletRequest,
+			HttpServletResponse servletResponse, String sContentType)
+	throws IOException
+	{
+		String sMethod = "prepareForHtmlOutput";
+		
+		// NOTE: Content type must be set before getwriter()
+		prepareForHttpResponse(servletRequest, servletResponse, sContentType);		
+		if (_oSysLog != null)
+			_oSysLog.log(Level.FINEST, MODULE, sMethod, "Create PrintWriter "+servletResponse.toString());
+		PrintWriter pwOut = servletResponse.getWriter();
+		return pwOut;
+	}	
+
+	/**
+	 * Prepare for other (non html) output or redirection. UTF-8 and no cacheing will be set too.
+	 * Specify your own content-type in the arguments (no need for "utf-8" part).
+	 * 
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param sContentType
+	 *            the content type
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 */
+	public static void prepareForHttpResponse(HttpServletRequest servletRequest,
+			HttpServletResponse servletResponse, String sContentType)
+	throws IOException
+	{
+		String sMethod = "prepareForHttpResponse";
+		
+		if (_oSysLog != null)
+			_oSysLog.log(Level.FINEST, MODULE, sMethod, "Prepare Http "+servletResponse.toString());
+		if (!Utils.hasValue(sContentType))
+			sContentType = "text/html";
+		servletResponse.setContentType(sContentType);
+		servletResponse.setCharacterEncoding("utf-8");
+		setDisableCachingHttpHeaders(servletRequest, servletResponse);
+	}
+
+	/**
+	 * Set HTTP headers that disable browser caching. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Sets HTTP 1.0 or HTTP 1.1 disable caching headers depending on the request. <br>
+	 * <br>
+	 * <b>Preconditions: </b>
+	 * <ul>
+	 * <li><code>oRequest != null</code></li>
+	 * <li><code>oResponse != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * <code>oResponse</code> contains caching disable headers. <br>
+	 * 
+	 * @param oRequest
+	 *            The HTTP request.
+	 * @param oResponse
+	 *            The HTTP response.
+	 */
+	public static void setDisableCachingHttpHeaders(HttpServletRequest oRequest, HttpServletResponse oResponse)
+	{
+		// turn off caching
+		if (oRequest.getProtocol().equalsIgnoreCase("HTTP/1.0")) {
+			oResponse.setHeader("Pragma", "no-cache");
+		}
+		else if (oRequest.getProtocol().equalsIgnoreCase("HTTP/1.1")) {
+			oResponse.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+		}
+		// turn off caching by proxies
+		oResponse.setHeader("Expires", "-1");
+	}
+
 }

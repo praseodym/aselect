@@ -46,7 +46,7 @@ public class ClosingConnectionHandler extends AbstractConnectionHandler
 	throws ASelectStorageException
 	{
 		super.getConnection();
-		String sMethod = "getConnection()";
+		String sMethod = "getConnection";
 		String sPassword = null;
 		String sJDBCDriver = null;
 		String sUsername = null;
@@ -181,7 +181,7 @@ public class ClosingConnectionHandler extends AbstractConnectionHandler
 	@Override
 	public void releaseConnection(Connection oConnection)
 	{
-		String sMethod = "releaseConnection()";
+		String sMethod = "releaseConnection";
 		super.releaseConnection(oConnection);
 		try { // Always try to return connection to the pool (if defined)
 			if (oConnection != null) {

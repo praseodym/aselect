@@ -88,7 +88,7 @@ import org.w3c.dom.Text;
  * is sent. <br>
  * <br>
  * The parameters for the response message will be buffered in a XML Document object. This object will be serialized to
- * a valid SOAP 1.2 response message when the <code>send()</code> method is called. <br>
+ * a valid SOAP 1.2 response message when the <code>soapSend()</code> method is called. <br>
  * <br>
  * This implementation uses the Xerces XML parser and DOM objects implementation (xercesImpl.jar and xml-apis.jar).
  * <i>For more info about Xerces see: <a href='http://xml.apache.org/xerces-j/' target='_new'> Xerces Java Parser
@@ -224,10 +224,10 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 	 * @return true, if inits the
 	 * @throws ASelectCommunicationException
 	 *             the a select communication exception
-	 * @see org.aselect.system.communication.server.IMessageCreatorInterface#init(org.aselect.system.communication.server.IProtocolRequest,
+	 * @see org.aselect.system.communication.server.IMessageCreatorInterface#soapInit(org.aselect.system.communication.server.IProtocolRequest,
 	 *      org.aselect.system.communication.server.IProtocolResponse)
 	 */
-	public boolean init(IProtocolRequest oRequest, IProtocolResponse oResponse)
+	public boolean soapInit(IProtocolRequest oRequest, IProtocolResponse oResponse)
 	throws ASelectCommunicationException
 	{
 		String sMethod = "init";
@@ -288,7 +288,7 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 				break;
 			}
 			// a Fault message will be send imediately to the sender
-			send();
+			soapSend();
 			// reset inputMessage
 			_oInputMessage = null;
 
@@ -518,9 +518,9 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 	 * @return true, if send
 	 * @throws ASelectCommunicationException
 	 *             the a select communication exception
-	 * @see org.aselect.system.communication.server.IOutputMessage#send()
+	 * @see org.aselect.system.communication.server.IOutputMessage#soapSend()
 	 */
-	public boolean send()
+	public boolean soapSend()
 	throws ASelectCommunicationException
 	{
 		String sMethod = "send";
@@ -536,6 +536,7 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 			oFormat.setIndenting(true);
 			oFormat.setLineWidth(80);
 			// Create serializer
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "getOutPutStream");
 			XMLSerializer oSerializer = new XMLSerializer(_oResponse.getOutputStream(), oFormat);
 			oSerializer.setNamespaces(true);
 			// serialize outputmessage to outputstream
@@ -547,14 +548,10 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 			_elOutputHeader = null;
 			return true;
 		}
-
-		catch (IOException eIO) // I/O error while serializing, should not
-		// occur
-		{
+		catch (IOException eIO) { // I/O error while serializing, should not occur
 			StringBuffer sbBuffer = new StringBuffer("DOM object could not be serialized: ");
 			sbBuffer.append(eIO.getMessage());
-			sbBuffer.append(", cause: ");
-			sbBuffer.append(Errors.ERROR_ASELECT_IO);
+			sbBuffer.append(", cause: ").append(Errors.ERROR_ASELECT_IO);
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eIO);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO);
 		}

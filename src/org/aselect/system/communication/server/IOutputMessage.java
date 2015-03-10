@@ -150,7 +150,7 @@ public interface IOutputMessage
 	 * @throws ASelectCommunicationException
 	 *             If communication fails.
 	 */
-	public boolean send()
+	public boolean soapSend()
 	throws ASelectCommunicationException;
 
 }

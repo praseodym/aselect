@@ -119,7 +119,7 @@ public class AgentNTService implements IAgentEventListener
 	 * The A-Select agent is started and the listeners and handling threads are started.
 	 */
 	public AgentNTService() {
-		String sMethod = "AgentNTService()";
+		String sMethod = "AgentNTService";
 		try {
 			_systemLogger = ASelectAgentSystemLogger.getHandle();
 
@@ -148,7 +148,7 @@ public class AgentNTService implements IAgentEventListener
 	 */
 	public void handleAgentEvent(AgentEvent oAgentEvent)
 	{
-		String sMethod = "handleAgentEvent()";
+		String sMethod = "handleAgentEvent";
 		if (oAgentEvent.getId() == AgentEvent.STOP) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "received STOP event; stopping");
 			if (_oASelectAgent != null)
@@ -181,7 +181,7 @@ public class AgentNTService implements IAgentEventListener
 	 */
 	private void stopAgent()
 	{
-		String sMethod = "stopAgent()";
+		String sMethod = "stopAgent";
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stopping Agent...");
 			// stop agent

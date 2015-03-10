@@ -166,7 +166,7 @@ public class SessionManager extends StorageManager
 	public void init()
 	throws ASelectException, ASelectConfigException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			_systemLogger = ASelectSystemLogger.getHandle();
 			ASelectConfigManager oConfigManager = ASelectConfigManager.getHandle();

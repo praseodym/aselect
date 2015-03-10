@@ -232,7 +232,7 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	 */
 	public void run()
 	{
-		String sMethod = "run()";
+		String sMethod = "run";
 
 		while (_active) {
 			try {

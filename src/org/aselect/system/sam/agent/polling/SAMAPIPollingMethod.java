@@ -125,7 +125,7 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 	throws ASelectSAMException
 	{
 		StringBuffer sbError = new StringBuffer(MODULE);
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		_oSystemLogger = oSystemLogger;
 		_oConfigManager = oConfigManager;
@@ -153,7 +153,7 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 	public boolean poll()
 	{
 		StringBuffer sbError = new StringBuffer(MODULE);
-		String sMethod = "poll()";
+		String sMethod = "poll";
 		boolean bLive = false;
 
 		try {
@@ -195,7 +195,7 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 	private HashMap communicate()
 	throws ASelectSAMException
 	{
-		String sMethod = "communicate()";
+		String sMethod = "communicate";
 		StringBuffer sbError = new StringBuffer();
 
 		HashMap htRequest = new HashMap();
@@ -269,7 +269,7 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 	private IClientCommunicator getCommunicator(Object oConfigSection)
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "getCommunicator()";
+		String sMethod = "getCommunicator";
 
 		IClientCommunicator oClientCommunicator = null;
 		String sProtocol = null;
