@@ -1438,10 +1438,10 @@ public class Utils
 	{
 		String sMethod = "prepareForHttpResponse";
 		
-		if (_oSysLog != null)
-			_oSysLog.log(Level.FINEST, MODULE, sMethod, "Prepare Http "+servletResponse.toString());
 		if (!Utils.hasValue(sContentType))
 			sContentType = "text/html";
+		if (_oSysLog != null)
+			_oSysLog.log(Level.FINEST, MODULE, sMethod, "HTTP headers: no-cache utf-8 "+sContentType);
 		servletResponse.setContentType(sContentType);
 		servletResponse.setCharacterEncoding("utf-8");
 		setDisableCachingHttpHeaders(servletRequest, servletResponse);
