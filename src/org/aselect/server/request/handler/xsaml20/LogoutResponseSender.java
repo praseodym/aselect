@@ -86,8 +86,9 @@ public class LogoutResponseSender
 		SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
 				.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
 		Endpoint samlEndpoint = endpointBuilder.buildObject();
+		// Older version of saml2 lib has problem with not setting Location so we set it
+		samlEndpoint.setLocation(logoutResponseLocation);
 		// RH, 20150226, so
-//		samlEndpoint.setLocation(logoutResponseLocation);
 //		String sAppUrl = request.getRequestURL().toString();
 //		samlEndpoint.setResponseLocation(sAppUrl)
 		// RH, 20150226, eo
@@ -95,7 +96,7 @@ public class LogoutResponseSender
 		// HTTPRedirectDeflateEncoder only uses ResponseLocation when sending StatusResponseType and ResponseLocation not empty
 		samlEndpoint.setResponseLocation(logoutResponseLocation);
 		// RH, 20150226, en
-		
+				
 		HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response,
 				logoutResponseLocation);
 		// RH 20081113, set appropriate headers
@@ -132,12 +133,14 @@ public class LogoutResponseSender
 		// store it in de history
 		SamlHistoryManager history = SamlHistoryManager.getHandle();
 		history.put(logoutResponse.getID(), logoutResponse.getDOM());
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "Dom stored in history" );
 
 		HTTPRedirectDeflateEncoder encoder = new HTTPRedirectDeflateEncoder();
 		try {
 			encoder.encode(messageContext);
 		}
 		catch (MessageEncodingException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Exception in encoder.encode:" + e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}
