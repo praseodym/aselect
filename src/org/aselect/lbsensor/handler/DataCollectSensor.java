@@ -62,10 +62,11 @@ public class DataCollectSensor extends BasicSensorHandler
 	protected void processLine(BufferedWriter oOutWriter, String sLine, String sId)
 	throws IOException
 	{
-		String sMethod = "processLine";
+		String sMethod = "processLine:" + Thread.currentThread().getName();
 		String sData = null;
 		TimerSensor ts = new TimerSensor(_oLbSensorLogger, "");
 
+		_oLbSensorLogger.log(Level.FINEST, MODULE, sMethod, "Processing line: -->" +sLine + "<--");
 		//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod,
 		//		"LINE ["+sLine.replace("\r\n", "CN").replace("\r", "CR").replace("\n", "NL")+
 		//		"], t="+Thread.currentThread().getId());
@@ -110,6 +111,8 @@ public class DataCollectSensor extends BasicSensorHandler
 				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Exception: "+e.getClass()+" :"+e.getMessage());
 			}
 			oOutWriter.write("HTTP/1.1 200 OK\r\n");
+		} else {
+			_oLbSensorLogger.log(Level.FINEST, MODULE, sMethod, "No usable data in line, ignored");
 		}
 	}
 

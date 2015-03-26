@@ -21,6 +21,8 @@ import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.logging.Level;
 
@@ -101,75 +103,82 @@ public class BasicSensorHandler implements ISensorHandler
 		return _myStore;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Runnable#run()
-	 */
-	public void run()
-	{
-		String sMethod = "run";
-		StringBuffer sRequestLine = new StringBuffer();
-		int n = -1;
+	
+	class BasicSensorSocketRunner extends Thread {
+		
+		Socket oSocket = null;
 		BufferedReader oInReader = null;
 		BufferedWriter oOutWriter = null;
-		Socket oSocket = null;
+		LbSensorSystemLogger _oLbSensorLogger = null;
+		StringBuffer sRequestLine = new StringBuffer();
+		int n = -1;
 
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, MODULE + " ip="+_myIP+" port="	+ _myPort+" host="+_myHost);
-		while (_bActive) {
+		
+		public BasicSensorSocketRunner(Socket oSocket , LbSensorSystemLogger _oLbSensorLogger ) {
+			this.oSocket = oSocket;
+			this._oLbSensorLogger = _oLbSensorLogger;
+		};
+		
+		public void run() {
+			String sMethod = "BasicSensorSocketRunner.run:" + Thread.currentThread().getName();
+
+			long now = System.currentTimeMillis();
+			long stamp = now % 1000000;
+
+			int port = oSocket.getPort();
+			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Accepted T=" + System.currentTimeMillis() +
+					" "+stamp + " port="+port +", t="+Thread.currentThread().getId());
+
 			try {
-				long now = System.currentTimeMillis();
-				long stamp = now % 1000000;
-				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Waiting. T=" + now + " " +
-						stamp+", t="+Thread.currentThread().getId());
-				oSocket = _oServiceSocket.accept();
-				int port = oSocket.getPort();
-				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Accepted T=" + System.currentTimeMillis() +
-						" "+stamp + " port="+port);
+				oSocket.setSoTimeout(40);
+			InputStream isInput = oSocket.getInputStream();
+			OutputStream osOutput = oSocket.getOutputStream();
+			oInReader = new BufferedReader(new InputStreamReader(isInput));
+			oOutWriter = new BufferedWriter(new OutputStreamWriter(osOutput));
 
-				oSocket.setSoTimeout(40); // timeout for read actions
-				InputStream isInput = oSocket.getInputStream();
-				OutputStream osOutput = oSocket.getOutputStream();
-				oInReader = new BufferedReader(new InputStreamReader(isInput));
-				oOutWriter = new BufferedWriter(new OutputStreamWriter(osOutput));
-
-				sRequestLine.setLength(0);
-				processStart(oOutWriter, _sMyId);
-				while ((n = oInReader.read()) != -1) {
-					char c = (char) n;
-					sRequestLine.append(c);
-					echoCharToStream(oOutWriter, c);  // default echo behaviour is here
-					if (sRequestLine.toString().indexOf("\r\n") >= 0) {
-						// We have a complete line
-						int len = sRequestLine.length();
-						//sRequestLine.setCharAt(len-2, '\0');
-						//:sRequestLine.setLength(len-2);
-						try {
-							processLine(oOutWriter, sRequestLine.substring(0, len-2), _sMyId);
-						}
-						catch (Exception e) { // continue anyway
-						}
-						sRequestLine.setLength(0);
+//			sRequestLine.setLength(0);
+			processStart(oOutWriter, _sMyId);
+			while ((n = oInReader.read()) != -1) {
+				char c = (char) n;
+				sRequestLine.append(c);
+				echoCharToStream(oOutWriter, c);  // default echo behaviour is here
+				if (sRequestLine.toString().indexOf("\r\n") >= 0) {
+					// We have a complete line
+					int len = sRequestLine.length();
+					//sRequestLine.setCharAt(len-2, '\0');
+					//:sRequestLine.setLength(len-2);
+					try {
+						processLine(oOutWriter, sRequestLine.substring(0, len-2), _sMyId);
 					}
+					catch (Exception e) { // continue anyway
+						_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "exception occurred in processLine()", e);
+					}
+					sRequestLine.setLength(0);
 				}
+			}
+			if (sRequestLine.length() > 0) {
+				processLine(oOutWriter, sRequestLine.toString(), _sMyId);
+			}
+			}
+			catch (SocketTimeoutException e0) {
+				// see if there were some characters left over 
+				_oLbSensorLogger.log(Level.FINEST, MODULE, sMethod, "SocketTimeoutException occurred:" + e0.getMessage());
 				if (sRequestLine.length() > 0) {
+				try {
+					_oLbSensorLogger.log(Level.FINEST, MODULE, sMethod, "Handling left-over line(s)");
 					processLine(oOutWriter, sRequestLine.toString(), _sMyId);
 				}
-				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Ready");
-			}
-			catch (IOException e) {
-				if (!"Read timed out".equals(e.getMessage()))
-					_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "I/O exception occurred", e);
-				// The last line of a POST request will probably land here
-				if (sRequestLine.length() > 0) {
-					try {
-						processLine(oOutWriter, sRequestLine.toString(), _sMyId);
-					}
-					catch (IOException e1) {
-						_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Exception occurred", e1);
-					}
+				catch (IOException e1) {
+					_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "IOException occurred in left-over processLine()", e1);
 				}
+				}
+
 			}
-			catch (Exception e) {
-				_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Exception occurred", e);
+			catch (SocketException e) {
+				_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "SocketException occurred: "+ e.getMessage());
+			} // timeout for read actions
+			catch (IOException e) {
+				_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "IOException occurred: "+ e.getMessage());
 			}
 			finally {
 				try {
@@ -182,6 +191,39 @@ public class BasicSensorHandler implements ISensorHandler
 				}
 				catch (Exception e) {
 				}
+			}
+			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Ready");
+			
+		}
+	}
+
+		
+
+	
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Runnable#run()
+	 */
+	public void run()
+	{
+		String sMethod = "run";
+		Socket oSocket = null;
+
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, MODULE + " ip="+_myIP+" port="	+ _myPort+" host="+_myHost);
+		while (_bActive) {
+			try {
+				long now = System.currentTimeMillis();
+				long stamp = now % 1000000;
+				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Waiting. T=" + now + " " +
+						stamp+", thread="+Thread.currentThread().getId());
+				oSocket = _oServiceSocket.accept();
+				
+				BasicSensorSocketRunner socketrunner = new BasicSensorSocketRunner(oSocket, _oLbSensorLogger);
+				socketrunner.start();
+
+
+			} catch (IOException e) {
+				_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "I/O exception occurred in _oServiceSocket", e);
 			}
 		}
 		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, MODULE + " stopped");
