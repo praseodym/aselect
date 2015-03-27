@@ -137,7 +137,7 @@ public class ResourceSTS extends ProtoRequestHandler
 				sbRedirect.append("&wtrealm=").append(URLEncoder.encode(sPwtrealm, "UTF-8"));
 
 			// Redirect to Requestor's IP/STS (Step 4)
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to IdP=" + sbRedirect);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "REDIRECT to IdP=" + sbRedirect);
 			response.sendRedirect(sbRedirect.toString());
 			return new RequestState(null);
 		}
@@ -222,14 +222,14 @@ public class ResourceSTS extends ProtoRequestHandler
 				// We want at least the "uid" attribute
 				htAttributes.put("uid", sUid);
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "htAttributes=" + htAttributes);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "htAttributes=" + htAttributes);
 
 			String sAudience = null; // "urn:federation:treyresearch";
 			// String sNameIdFormat = "http://schemas.xmlsoap.org/claims/UPN";
 			// String sProviderId = "http://www.anoigo.nl/wsfed_sp.xml";
 			String sRequestorToken = createRequestorToken(servletRequest, _sProviderId, sUid, _sUserDomain, _sNameIdFormat,
 					sAudience, htAttributes, null);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Token OUT: RequestorToken=" + sRequestorToken);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Token OUT: RequestorToken=" + sRequestorToken);
 
 			String sInputs = buildHtmlInput("wa", "wsignin1.0");
 			sInputs += buildHtmlInput("wctx", Tools.htmlEncode(sPwctx));

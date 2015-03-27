@@ -69,7 +69,8 @@ public class AccountSTS extends ProtoRequestHandler
 	protected HashMap _htWauthMapping;	// RH, 20141014, n
 
 	protected HashMap<String, Pattern> _htSP_wctxregex;	// RH, 20130916, n
-	protected HashMap<String, String>	_htSP_SignAlgorithm;	// RH, 20130924, n
+	protected HashMap<String, String>	_htSP_SignAlgorithm;	// RH, 20130924, alg for signing the returned token
+	
 
 
 	// protected HashMap _htSP_ErrorUrl;
@@ -185,6 +186,7 @@ public class AccountSTS extends ProtoRequestHandler
 			// RH, 20141014, sn
 
 			_sPostTemplate = readTemplateFromConfig(oConfig, "post_template");
+
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -244,7 +246,8 @@ public class AccountSTS extends ProtoRequestHandler
 		}
 		
 		// If wctx doesn't match the required pattern, kick them out
-		if ( !((Pattern)_htSP_wctxregex.get(sPwtrealm)).matcher(sPwctx).matches()) {
+//		if ( !((Pattern)_htSP_wctxregex.get(sPwtrealm)).matcher(sPwctx).matches()) {	// RH, 20141031, o
+		if ( sPwctx != null &&  !((Pattern)_htSP_wctxregex.get(sPwtrealm)).matcher(sPwctx).matches()) {	// RH, 20141031, n
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "wctx doesn't match pattern for realm: " + sPwtrealm);
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
@@ -255,6 +258,9 @@ public class AccountSTS extends ProtoRequestHandler
 			sPwreply = sReply; // _sDefaultWreply; // "https://adfsresource.treyresearch.net/adfs/ls";
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'wreply' parameter in request, using: " + sPwreply);
 		}
+
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "wsfed_ap PATH=" + servletRequest.getPathInfo() + " "
+				+ servletRequest.getMethod() + " " + servletRequest.getQueryString());
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "wsfed_ap PATH=" + servletRequest.getPathInfo() + " "
 				+ servletRequest.getMethod() + " " + servletRequest.getQueryString());
 
@@ -353,6 +359,8 @@ public class AccountSTS extends ProtoRequestHandler
 		HashMap htCredentials = null;
 		HashMap htAttributes = null;
 		try {
+			// RH, 20141027, so, only allow return from A-Select server
+			/*
 			if (sPwa != null && !sPwa.equals("")) {
 				// From Resource Partner, get attributes from resource token
 				htAttributes = extractUidAndAttributes(sPwresult);
@@ -361,13 +369,15 @@ public class AccountSTS extends ProtoRequestHandler
 				// RM_42_01
 			}
 			else {
+			*/
+			// RH, 20141027, eo, only allow return from A-Select server
 				// From A-Select server
 				sUrlTgt = decryptCredentials(sUrlTgt);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "From A-Select TGT="+Tools.clipString(sUrlTgt, 40, true));
 
 				// Get credentials and attributes using Cookie
 				htCredentials = getASelectCredentials(request);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "getAselectCredentials: " + htCredentials);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "getAselectCredentials: " + htCredentials);
 				sUid = (String) htCredentials.get("uid");
 				if (sUid == null) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No parameter 'uid' found");
@@ -383,13 +393,17 @@ public class AccountSTS extends ProtoRequestHandler
 					htAttributes.put("auhsp_level", sLevel);
 				}
 				sTgt = (String) htCredentials.get("tgt");
-			}
+				// RH, 20141027, so, only allow return from A-Select server
+//			}
+		// RH, 20141027, eo, only allow return from A-Select server
 			String sTryUid = (String) htAttributes.get("uid");
 			if (sTryUid == null)
 				htAttributes.put("uid", sUid);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "htAttributes=" + htAttributes + " pass_transient_id="
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "htAttributes=" + htAttributes + " pass_transient_id="
 					+ _sPassTransientId);
 
+			// RH, 20141027, so, only allow return from A-Select server
+			/*
 			if (htCredentials == null) {
 				// Create Token and POST it to the caller
 				// No credentials were made yet, Issue a TGT
@@ -418,10 +432,14 @@ public class AccountSTS extends ProtoRequestHandler
 				return postRequestorToken(request, response, sUid, htSessionData, htAttributes);
 			}
 			else {
+			*/
+						// RH, 20141027, eo, only allow return from A-Select server
 				if ("true".equals(_sPassTransientId))
 					htAttributes.put("transient_id", sTgt);
 				return postRequestorToken(request, response, sUid, htCredentials, htAttributes);
-			}
+				// RH, 20141027, so, only allow return from A-Select server
+//			}
+			// RH, 20141027, eo, only allow return from A-Select server
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -477,7 +495,7 @@ public class AccountSTS extends ProtoRequestHandler
 //					sAudience, htAttributes, sSubjConf);	// RH, 20130924, o
 			String sRequestorToken = createRequestorToken(servletRequest, _sProviderId, sUid, _sUserDomain, _sNameIdFormat,
 					sAudience, htAttributes, sSubjConf, _htSP_SignAlgorithm.get(sAudience));	// RH, 20130924, n
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Token OUT: RequestorToken wresult=" + sRequestorToken);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Token OUT: RequestorToken wresult=" + sRequestorToken);
 
 			// Return Requestor Token - Step 6
 			// POST to Requestor's STS (IdP): take wreply and wctx from Step 5
@@ -512,7 +530,7 @@ public class AccountSTS extends ProtoRequestHandler
 		String sMethod = "serializeTheseAttributes";
 		
 		String sSerializedAttributes = Utils.serializeAttributes(htAttribs);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "sSerializedAttributes=" + sSerializedAttributes);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "sSerializedAttributes=" + sSerializedAttributes);
 		return sSerializedAttributes;
 	}
 
