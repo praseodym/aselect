@@ -63,6 +63,8 @@
     <!-- server: listens for client requests, export results to file -->
     <handler id="data_collector" class="org.aselect.lbsensor.handler.DataCollectSensor">
 	<listen_port>1805</listen_port>
+	<!-- Optional listen host	-->
+	<listen_host>127.0.0.1</listen_host>
 	<export_after>600</export_after>
 	<collect_level>1</collect_level>
 	<run_export>60</run_export>

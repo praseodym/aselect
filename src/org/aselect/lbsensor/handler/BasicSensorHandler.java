@@ -30,6 +30,7 @@ import org.aselect.system.communication.server.Communicator;
 import org.aselect.system.communication.server.IInputMessage;
 import org.aselect.system.communication.server.IOutputMessage;
 import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.lbsensor.ISensorHandler;
 import org.aselect.lbsensor.LbSensorConfigManager;
@@ -59,16 +60,30 @@ public class BasicSensorHandler implements ISensorHandler
 		String sMethod = "initialize";
 		int iPort = -1;
 		int iIntCount, iIntLength;
+		InetAddress inetAddress = null;
 
 		_sMyId = sId;
 
 		iPort = _oConfigManager.getSimpleIntParam(oConfigHandler, "listen_port", true);
 		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Port=" + iPort);
 
+		String sInetAddress = _oConfigManager.getSimpleParam(oConfigHandler, "listen_host", false);
+		if ( sInetAddress != null && sInetAddress.length() > 0 ) {
+			try {
+				inetAddress = InetAddress.getByName(sInetAddress);
+			}
+			catch (UnknownHostException e) {
+				_oLbSensorLogger.log(Level.SEVERE, MODULE, sMethod, "Invalid 'listen_host' provided, Host=" + sInetAddress);
+				throw new ASelectConfigException("Invalid 'listen_host' provided,", e);
+			}
+			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Host=" + inetAddress.getHostAddress());
+		}
+		
 		// try to allocate the listening ports on localhost.
 		// Bauke, 20090707: Listen on all addresses
 		try {
-			_oServiceSocket = new ServerSocket(iPort, 50, null/* InetAddress.getByName("localhost") */);
+//			_oServiceSocket = new ServerSocket(iPort, 50, null/* InetAddress.getByName("localhost") */);
+			_oServiceSocket = new ServerSocket(iPort, 50, inetAddress);
 			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Socket=" + _oServiceSocket);
 		}
 		catch (Exception e) {
